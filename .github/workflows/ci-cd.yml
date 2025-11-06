@@ -1,0 +1,377 @@
+name: HaloITSM Plugin CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  PLUGIN_NAME: haloitsm
+  PLUGIN_DIR: plugins/haloitsm
+
+jobs:
+  # Quality gates - linting, formatting, security
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        cd ${{ env.PLUGIN_DIR }}
+        pip install -r requirements.txt
+        pip install black flake8 bandit safety
+
+    - name: Run Black formatting check
+      run: |
+        cd ${{ env.PLUGIN_DIR }}
+        black --check --line-length 100 komand_${{ env.PLUGIN_NAME }}/
+
+    - name: Run Flake8 linting
+      run: |
+        cd ${{ env.PLUGIN_DIR }}
+        flake8 --max-line-length=100 --ignore=E203,W503 komand_${{ env.PLUGIN_NAME }}/
+
+    - name: Run Bandit security scan
+      run: |
+        cd ${{ env.PLUGIN_DIR }}
+        bandit -r komand_${{ env.PLUGIN_NAME }}/ -f json -o bandit-report.json
+      continue-on-error: true
+
+    - name: Run Safety dependency scan
+      run: |
+        cd ${{ env.PLUGIN_DIR }}
+        safety check --json --output safety-report.json
+      continue-on-error: true
+
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-reports
+        path: |
+          ${{ env.PLUGIN_DIR }}/bandit-report.json
+          ${{ env.PLUGIN_DIR }}/safety-report.json
+
+  # Unit tests
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        cd ${{ env.PLUGIN_DIR }}
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+
+    - name: Install plugin runtime
+      run: pip install insightconnect-plugin-runtime
+
+    - name: Run unit tests
+      run: |
+        cd ${{ env.PLUGIN_DIR }}
+        python -m pytest tests/ -v --tb=short --cov=komand_${{ env.PLUGIN_NAME }} --cov-report=xml --cov-report=html
+
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: ${{ env.PLUGIN_DIR }}/coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+    - name: Upload coverage artifacts
+      uses: actions/upload-artifact@v3
+      if: matrix.python-version == '3.9'
+      with:
+        name: coverage-report
+        path: ${{ env.PLUGIN_DIR }}/htmlcov/
+
+  # Plugin validation
+  validate:
+    name: Plugin Validation
+    runs-on: ubuntu-latest
+    needs: [quality, test]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        cd ${{ env.PLUGIN_DIR }}
+        pip install -r requirements.txt
+        pip install insightconnect-plugin-runtime
+
+    - name: Validate plugin specification
+      run: |
+        cd ${{ env.PLUGIN_DIR }}
+        insight-plugin validate
+
+    - name: Build plugin image
+      run: |
+        cd ${{ env.PLUGIN_DIR }}
+        docker build -t rapid7-${{ env.PLUGIN_NAME }}:${{ github.sha }} .
+
+    - name: Export plugin
+      run: |
+        cd ${{ env.PLUGIN_DIR }}
+        insight-plugin export
+
+    - name: Upload plugin artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: plugin-build
+        path: ${{ env.PLUGIN_DIR }}/*.plg
+
+  # Integration tests (only on main branch and PRs to main)
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [validate]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
+    environment: staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        cd ${{ env.PLUGIN_DIR }}
+        pip install -r requirements.txt
+        pip install insightconnect-plugin-runtime
+
+    - name: Run integration tests
+      env:
+        HALO_CLIENT_ID: ${{ secrets.STAGING_HALO_CLIENT_ID }}
+        HALO_CLIENT_SECRET: ${{ secrets.STAGING_HALO_CLIENT_SECRET }}
+        HALO_AUTH_SERVER: ${{ secrets.STAGING_HALO_AUTH_SERVER }}
+        HALO_RESOURCE_SERVER: ${{ secrets.STAGING_HALO_RESOURCE_SERVER }}
+        HALO_TENANT: ${{ secrets.STAGING_HALO_TENANT }}
+      run: |
+        cd ${{ env.PLUGIN_DIR }}
+        python -m pytest tests/test_integration.py -v --tb=short
+      continue-on-error: true
+
+    - name: Run smoke tests
+      env:
+        HALO_CLIENT_ID: ${{ secrets.STAGING_HALO_CLIENT_ID }}
+        HALO_CLIENT_SECRET: ${{ secrets.STAGING_HALO_CLIENT_SECRET }}
+        HALO_AUTH_SERVER: ${{ secrets.STAGING_HALO_AUTH_SERVER }}
+        HALO_RESOURCE_SERVER: ${{ secrets.STAGING_HALO_RESOURCE_SERVER }}
+        HALO_TENANT: ${{ secrets.STAGING_HALO_TENANT }}
+      run: |
+        cd ${{ env.PLUGIN_DIR }}
+        python smoke_test.py --environment staging
+
+    - name: Upload smoke test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: smoke-test-results
+        path: ${{ env.PLUGIN_DIR }}/smoke_test_results_*.json
+
+  # Build and package for release
+  build:
+    name: Build Release Package
+    runs-on: ubuntu-latest
+    needs: [quality, test, validate]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Get version
+      id: version
+      run: |
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          VERSION=${GITHUB_REF#refs/tags/v}
+        else
+          VERSION=$(git describe --tags --always --dirty)-$(git rev-parse --short HEAD)
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Version: $VERSION"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        cd ${{ env.PLUGIN_DIR }}
+        pip install -r requirements.txt
+        pip install insightconnect-plugin-runtime
+
+    - name: Build release package
+      env:
+        VERSION: ${{ steps.version.outputs.version }}
+        BUILD_NUMBER: ${{ github.run_number }}
+      run: |
+        make package
+
+    - name: Upload release package
+      uses: actions/upload-artifact@v3
+      with:
+        name: release-package-${{ steps.version.outputs.version }}
+        path: dist/
+
+  # Production smoke tests (only on tags)
+  production-smoke:
+    name: Production Smoke Tests
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: startsWith(github.ref, 'refs/tags/v')
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        cd ${{ env.PLUGIN_DIR }}
+        pip install -r requirements.txt
+
+    - name: Run production smoke tests
+      env:
+        HALO_CLIENT_ID: ${{ secrets.PROD_HALO_CLIENT_ID }}
+        HALO_CLIENT_SECRET: ${{ secrets.PROD_HALO_CLIENT_SECRET }}
+        HALO_AUTH_SERVER: ${{ secrets.PROD_HALO_AUTH_SERVER }}
+        HALO_RESOURCE_SERVER: ${{ secrets.PROD_HALO_RESOURCE_SERVER }}
+        HALO_TENANT: ${{ secrets.PROD_HALO_TENANT }}
+      run: |
+        cd ${{ env.PLUGIN_DIR }}
+        python smoke_test.py --environment production
+
+    - name: Upload production smoke test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: production-smoke-test-results
+        path: ${{ env.PLUGIN_DIR }}/smoke_test_results_*.json
+
+  # GitHub release (only on tags)
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [build, production-smoke]
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Get version
+      id: version
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+    - name: Download release package
+      uses: actions/download-artifact@v3
+      with:
+        name: release-package-${{ steps.version.outputs.version }}
+        path: dist/
+
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        echo "## HaloITSM Plugin v${{ steps.version.outputs.version }}" > release_notes.md
+        echo "" >> release_notes.md
+        echo "### Features" >> release_notes.md
+        echo "- Complete HaloITSM integration for Rapid7 InsightConnect" >> release_notes.md
+        echo "- OAuth2 authentication with token management" >> release_notes.md
+        echo "- Bidirectional sync with InsightIDR and InsightVM" >> release_notes.md
+        echo "- Comprehensive webhook support" >> release_notes.md
+        echo "- Production-ready with monitoring and error handling" >> release_notes.md
+        echo "" >> release_notes.md
+        echo "### Installation" >> release_notes.md
+        echo "1. Download the plugin package below" >> release_notes.md
+        echo "2. Extract and upload the .plg file to InsightConnect" >> release_notes.md
+        echo "3. Follow the configuration guide in CONFIGURATION.md" >> release_notes.md
+        echo "" >> release_notes.md
+        echo "### Documentation" >> release_notes.md
+        echo "- [Configuration Guide](https://github.com/${{ github.repository }}/blob/v${{ steps.version.outputs.version }}/CONFIGURATION.md)" >> release_notes.md
+        echo "- [Production Deployment](https://github.com/${{ github.repository }}/blob/v${{ steps.version.outputs.version }}/PRODUCTION.md)" >> release_notes.md
+        echo "- [Project Description](https://github.com/${{ github.repository }}/blob/v${{ steps.version.outputs.version }}/ProjectDescription.md)" >> release_notes.md
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ steps.version.outputs.version }}
+        name: HaloITSM Plugin v${{ steps.version.outputs.version }}
+        body_path: release_notes.md
+        files: |
+          dist/${{ env.PLUGIN_NAME }}-${{ steps.version.outputs.version }}.tar.gz
+        draft: false
+        prerelease: false
+
+  # Notify on deployment
+  notify:
+    name: Deployment Notification
+    runs-on: ubuntu-latest
+    needs: [release]
+    if: always()
+    
+    steps:
+    - name: Notify Teams
+      if: success()
+      run: |
+        echo "✅ HaloITSM Plugin deployment successful!"
+        echo "Version: ${{ steps.version.outputs.version }}"
+        echo "Release: https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }}"
+        # Add webhook calls to notify teams (Slack, Teams, etc.)
+
+    - name: Notify on Failure
+      if: failure()
+      run: |
+        echo "❌ HaloITSM Plugin deployment failed!"
+        echo "Check the workflow logs for details."
+        # Add webhook calls to notify teams of failure

@@ -246,15 +246,58 @@ Enable debug logging in InsightConnect to troubleshoot issues:
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## Production Deployment
+
+For production deployment, please review the comprehensive guides:
+
+- **[Production Deployment Guide](PRODUCTION.md)**: Complete production setup instructions
+- **[Production Readiness Checklist](PRODUCTION_CHECKLIST.md)**: Pre-deployment validation checklist
+- **[Configuration Guide](CONFIGURATION.md)**: Detailed configuration examples
+
+### Quick Production Setup
+
+1. **Review Requirements**
+   ```bash
+   # Run production readiness check
+   make quality-gate
+   ```
+
+2. **Build Release Package**
+   ```bash
+   # Create production-ready package
+   make package
+   ```
+
+3. **Deploy to Production**
+   - Follow [PRODUCTION.md](PRODUCTION.md) for detailed steps
+   - Complete [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md)
+   - Run smoke tests: `python smoke_test.py --environment production`
+
+4. **Monitor Deployment**
+   - Set up monitoring dashboards
+   - Configure alerting thresholds
+   - Validate webhook delivery
+
+### CI/CD Integration
+
+This plugin includes GitHub Actions for automated:
+- Code quality checks (linting, security scans)
+- Unit and integration testing
+- Plugin validation and building
+- Automated releases with smoke testing
+
+See [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml) for the complete pipeline.
+
 ## Support
 
 - **Documentation**: [Rapid7 InsightConnect Docs](https://docs.rapid7.com/insightconnect/)
 - **HaloITSM API**: [API Documentation](https://haloservicedesk.com/apidoc/)
-- **Issues**: [GitHub Issues](https://github.com/rapid7/insightconnect-plugins/issues)
+- **Issues**: [GitHub Issues](https://github.com/derricksmith/Rapid7HaloITSM/issues)
 - **Community**: [Rapid7 Community](https://community.rapid7.com/)
 
 ---
 
 **Version**: 1.0.0  
 **Last Updated**: November 6, 2025  
-**Compatibility**: InsightConnect 4.0+, HaloITSM Cloud/On-Premise
+**Compatibility**: InsightConnect 4.0+, HaloITSM Cloud/On-Premise  
+**Production Status**: ✅ Production Ready
