@@ -96,6 +96,36 @@ connection:
     type: boolean
     required: false
     default: true
+  default_ticket_type_id:
+    title: Default Ticket Type ID
+    description: Default ticket type ID to use when creating tickets (can be overridden per action)
+    type: integer
+    required: false
+    example: 1
+  default_priority_id:
+    title: Default Priority ID
+    description: Default priority ID to use when creating tickets (can be overridden per action)
+    type: integer
+    required: false
+    example: 3
+  default_team_id:
+    title: Default Team ID
+    description: Default team ID to assign tickets to (can be overridden per action)
+    type: integer
+    required: false
+    example: 5
+  default_agent_id:
+    title: Default Agent ID
+    description: Default agent ID to assign tickets to (can be overridden per action)
+    type: integer
+    required: false
+    example: 100
+  default_category_id:
+    title: Default Category ID
+    description: Default category ID for tickets (can be overridden per action)
+    type: integer
+    required: false
+    example: 10
 
 actions:
   create_ticket:
@@ -116,9 +146,9 @@ actions:
         example: Multiple failed login attempts detected from IP 192.168.1.100
       tickettype_id:
         title: Ticket Type ID
-        description: ID of the ticket type
+        description: ID of the ticket type (uses connection default if not specified)
         type: integer
-        required: true
+        required: false
         example: 1
       priority_id:
         title: Priority ID

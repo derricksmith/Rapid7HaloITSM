@@ -23,6 +23,8 @@ The HaloITSM plugin for Rapid7 InsightConnect enables seamless integration betwe
 * **Real-time Notifications**: Receive webhook notifications for ticket events
 * **Bidirectional Sync**: Synchronize status changes between InsightConnect and HaloITSM
 * **Custom Fields**: Support for HaloITSM custom fields
+* **Default Configuration**: Set default ticket types, priorities, teams, and categories at connection level
+* **Flexible Overrides**: Override defaults on a per-action basis when needed
 
 ## Setup
 
@@ -52,7 +54,19 @@ The HaloITSM plugin for Rapid7 InsightConnect enables seamless integration betwe
      - **Authorization Server**: `https://your-tenant.haloitsm.com/auth`
      - **Resource Server**: `https://your-tenant.haloitsm.com/api`
      - **Tenant**: Your HaloITSM tenant name
+   - **Optional Default Configuration** (recommended for consistency):
+     - **Default Ticket Type ID**: Default ticket type (e.g., 1 for Incident)
+     - **Default Priority ID**: Default priority level (e.g., 3 for High)
+     - **Default Team ID**: Default team assignment (e.g., 15 for SOC Team)
+     - **Default Agent ID**: Default agent assignment
+     - **Default Category ID**: Default ticket category
    - Test the connection and save
+
+#### Benefits of Default Configuration:
+- **Consistency**: All tickets automatically use appropriate defaults
+- **Simplified Workflows**: Less configuration needed in each action
+- **Team-Specific**: Create different connections for different teams
+- **Flexibility**: Can still override defaults when needed
 
 ## Actions
 
@@ -62,10 +76,31 @@ Create a new ticket in HaloITSM.
 **Input:**
 - **Summary** (required): Ticket title
 - **Details** (required): Ticket description
-- **Ticket Type ID** (required): ID of the ticket type
-- **Priority ID**: Priority level (1=Low, 2=Medium, 3=High, 4=Critical)
+- **Ticket Type ID**: ID of the ticket type (uses connection default if not specified)
+- **Priority ID**: Priority level (uses connection default if not specified)
 - **Status ID**: Initial status (default: 1=New)
-- **Agent ID**: Assigned agent ID
+- **Agent ID**: Assigned agent ID (uses connection default if not specified)
+- **Team ID**: Assigned team ID (uses connection default if not specified)
+- **Category ID**: Ticket category (uses connection default if not specified)
+- **Custom Fields**: Array of custom field objects
+
+**Note**: With default configuration, only Summary and Details are required. All other fields will use connection defaults unless explicitly specified.
+
+**Examples:**
+
+*Using connection defaults:*
+```
+Summary: "Security Alert: Suspicious Activity"
+Details: "Multiple failed login attempts detected from IP 192.168.1.100"
+```
+
+*Overriding specific fields:*
+```
+Summary: "Critical Security Incident"  
+Details: "Data breach suspected - immediate attention required"
+Priority ID: 4  # Override to Critical priority
+Agent ID: 100   # Assign to specific security lead
+```
 - **Team ID**: Assigned team ID
 - **Custom Fields**: Array of custom field objects
 

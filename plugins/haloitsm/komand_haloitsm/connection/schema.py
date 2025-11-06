@@ -45,6 +45,36 @@ class ConnectionSchema(insightconnect_plugin_runtime.Input):
           "description": "Verify SSL certificate",
           "default": true,
           "order": 6
+        },
+        "default_ticket_type_id": {
+          "type": "integer",
+          "title": "Default Ticket Type ID",
+          "description": "Default ticket type ID to use when creating tickets (can be overridden per action)",
+          "order": 7
+        },
+        "default_priority_id": {
+          "type": "integer",
+          "title": "Default Priority ID", 
+          "description": "Default priority ID to use when creating tickets (can be overridden per action)",
+          "order": 8
+        },
+        "default_team_id": {
+          "type": "integer",
+          "title": "Default Team ID",
+          "description": "Default team ID to assign tickets to (can be overridden per action)",
+          "order": 9
+        },
+        "default_agent_id": {
+          "type": "integer",
+          "title": "Default Agent ID",
+          "description": "Default agent ID to assign tickets to (can be overridden per action)",
+          "order": 10
+        },
+        "default_category_id": {
+          "type": "integer",
+          "title": "Default Category ID",
+          "description": "Default category ID for tickets (can be overridden per action)",
+          "order": 11
         }
       },
       "required": [
@@ -69,3 +99,8 @@ class Input:
     RESOURCE_SERVER = "resource_server"
     TENANT = "tenant"
     SSL_VERIFY = "ssl_verify"
+    DEFAULT_TICKET_TYPE_ID = "default_ticket_type_id"
+    DEFAULT_PRIORITY_ID = "default_priority_id"
+    DEFAULT_TEAM_ID = "default_team_id"
+    DEFAULT_AGENT_ID = "default_agent_id"
+    DEFAULT_CATEGORY_ID = "default_category_id"

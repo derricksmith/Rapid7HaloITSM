@@ -22,21 +22,32 @@ class CreateTicket(insightconnect_plugin_runtime.Action):
         ticket_data = {
             "summary": params.get(Input.SUMMARY),
             "details": params.get(Input.DETAILS),
-            "tickettype_id": params.get(Input.TICKETTYPE_ID),
             "actioncode": 0  # 0 = New ticket
         }
         
-        # Add optional fields if provided
-        optional_fields = [
-            Input.PRIORITY_ID, Input.STATUS_ID, Input.CATEGORY_ID,
-            Input.AGENT_ID, Input.TEAM_ID, Input.SITE_ID, Input.USER_ID
+        # Use provided ticket type or fall back to connection default
+        ticket_type_id = params.get(Input.TICKETTYPE_ID) or self.connection.default_ticket_type_id
+        if not ticket_type_id:
+            raise PluginException(
+                cause="Missing ticket type ID",
+                assistance="Please provide tickettype_id in action parameters or set default_ticket_type_id in connection configuration"
+            )
+        ticket_data["tickettype_id"] = ticket_type_id
+        
+        # Add optional fields with connection defaults as fallbacks
+        field_defaults = [
+            (Input.PRIORITY_ID, "priority_id", self.connection.default_priority_id),
+            (Input.STATUS_ID, "status_id", None),  # No default for status, use HaloITSM default
+            (Input.CATEGORY_ID, "category_id", self.connection.default_category_id),
+            (Input.AGENT_ID, "agent_id", self.connection.default_agent_id),
+            (Input.TEAM_ID, "team_id", self.connection.default_team_id),
+            (Input.SITE_ID, "site_id", None),
+            (Input.USER_ID, "user_id", None)
         ]
         
-        for field in optional_fields:
-            value = params.get(field)
+        for input_field, api_field, default_value in field_defaults:
+            value = params.get(input_field) or default_value
             if value is not None:
-                # Convert field names from snake_case to match HaloITSM API
-                api_field = field.replace("_", "")
                 ticket_data[api_field] = value
         
         # Add custom fields if provided

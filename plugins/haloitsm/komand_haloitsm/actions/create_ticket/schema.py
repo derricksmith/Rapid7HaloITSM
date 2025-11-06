@@ -24,7 +24,7 @@ class CreateTicketInput(insightconnect_plugin_runtime.Input):
         "tickettype_id": {
           "type": "integer",
           "title": "Ticket Type ID",
-          "description": "ID of the ticket type",
+          "description": "ID of the ticket type (uses connection default if not specified)",
           "order": 3
         },
         "priority_id": {
@@ -82,8 +82,7 @@ class CreateTicketInput(insightconnect_plugin_runtime.Input):
       },
       "required": [
         "summary",
-        "details",
-        "tickettype_id"
+        "details"
       ],
       "definitions": {}
     }

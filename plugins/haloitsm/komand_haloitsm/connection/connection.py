@@ -27,6 +27,13 @@ class Connection(insightconnect_plugin_runtime.Connection):
         self.tenant = params.get(Input.TENANT)
         self.ssl_verify = params.get(Input.SSL_VERIFY, True)
         
+        # Store default values for ticket creation
+        self.default_ticket_type_id = params.get(Input.DEFAULT_TICKET_TYPE_ID)
+        self.default_priority_id = params.get(Input.DEFAULT_PRIORITY_ID)
+        self.default_team_id = params.get(Input.DEFAULT_TEAM_ID)
+        self.default_agent_id = params.get(Input.DEFAULT_AGENT_ID)
+        self.default_category_id = params.get(Input.DEFAULT_CATEGORY_ID)
+        
         # Validate required parameters
         if not all([self.client_id, self.client_secret, self.auth_server, self.resource_server, self.tenant]):
             raise PluginException(
