@@ -364,7 +364,7 @@ jobs:
     - name: Notify Teams
       if: success()
       run: |
-        echo "✅ HaloITSM Plugin deployment successful!"
+        echo "HaloITSM Plugin deployment successful!"
         echo "Version: ${{ steps.version.outputs.version }}"
         echo "Release: https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }}"
         # Add webhook calls to notify teams (Slack, Teams, etc.)
@@ -372,6 +372,6 @@ jobs:
     - name: Notify on Failure
       if: failure()
       run: |
-        echo "❌ HaloITSM Plugin deployment failed!"
+        echo "HaloITSM Plugin deployment failed!"
         echo "Check the workflow logs for details."
         # Add webhook calls to notify teams of failure

@@ -83,7 +83,7 @@ class SmokeTestRunner:
     
     def _log_test(self, test_name: str, success: bool, message: str = "", duration: float = 0):
         """Log test result"""
-        status = "✅ PASS" if success else "❌ FAIL"
+        status = "PASS" if success else "FAIL"
         result = {
             "test": test_name,
             "success": success,
@@ -437,8 +437,8 @@ class SmokeTestRunner:
     
     def run_all_tests(self) -> bool:
         """Run all smoke tests"""
-        print(f"\n🚀 Starting HaloITSM Plugin Smoke Tests - {self.environment.upper()}")
-        print(f"📅 Test Run: {datetime.now().isoformat()}")
+        print(f"\nStarting HaloITSM Plugin Smoke Tests - {self.environment.upper()}")
+        print(f"Test Run: {datetime.now().isoformat()}")
         print("=" * 60)
         
         # Run tests in order
@@ -464,7 +464,7 @@ class SmokeTestRunner:
         
         # Print summary
         print("\n" + "=" * 60)
-        print("📊 SMOKE TEST SUMMARY")
+        print("SMOKE TEST SUMMARY")
         print("=" * 60)
         
         passed_count = sum(1 for result in self.test_results if result["success"])
@@ -475,14 +475,14 @@ class SmokeTestRunner:
         print(f"Success Rate: {(passed_count/total_count)*100:.1f}%")
         
         if all_passed:
-            print("🎉 ALL TESTS PASSED - Production ready!")
+            print("ALL TESTS PASSED - Production ready!")
         else:
-            print("⚠️  SOME TESTS FAILED - Review before production deployment")
+            print("SOME TESTS FAILED - Review before production deployment")
             
             # Show failed tests
             failed_tests = [r for r in self.test_results if not r["success"]]
             if failed_tests:
-                print("\n❌ Failed Tests:")
+                print("\nFailed Tests:")
                 for test in failed_tests:
                     print(f"   • {test['test']}: {test['message']}")
         
@@ -502,7 +502,7 @@ class SmokeTestRunner:
                 "test_results": self.test_results
             }, f, indent=2)
         
-        print(f"\n📁 Detailed results saved to: {results_file}")
+        print(f"\nDetailed results saved to: {results_file}")
         
         return all_passed
 
@@ -527,7 +527,7 @@ def main():
         sys.exit(0 if success else 1)
         
     except Exception as e:
-        print(f"\n❌ SMOKE TEST FAILED: {str(e)}")
+        print(f"\nSMOKE TEST FAILED: {str(e)}")
         sys.exit(1)
 
 

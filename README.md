@@ -300,4 +300,4 @@ See [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml) for the complet
 **Version**: 1.0.0  
 **Last Updated**: November 6, 2025  
 **Compatibility**: InsightConnect 4.0+, HaloITSM Cloud/On-Premise  
-**Production Status**: ✅ Production Ready
+**Production Status**: Production Ready

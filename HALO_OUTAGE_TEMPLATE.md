@@ -1,6 +1,6 @@
 # HaloITSM Outage - Manual Incident Tracking Template
 
-## 📋 Emergency Incident Tracking Sheet
+## Emergency Incident Tracking Sheet
 
 **Use this template when HaloITSM is unavailable**
 
@@ -51,7 +51,7 @@
 
 ---
 
-## 🔄 Recovery Checklist
+## Recovery Checklist
 
 **When HaloITSM service is restored:**
 
@@ -82,7 +82,7 @@ For each manual incident above:
 
 ---
 
-## 📞 Emergency Contacts
+## Emergency Contacts
 
 | Role | Contact | Phone | Email |
 |------|---------|--------|-------|
@@ -93,7 +93,7 @@ For each manual incident above:
 
 ---
 
-## 📝 Communication Templates
+## Communication Templates
 
 ### Outage Notification
 ```
