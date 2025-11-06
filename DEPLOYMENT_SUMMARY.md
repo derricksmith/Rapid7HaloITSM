@@ -121,7 +121,7 @@ HaloITSM Updates → Webhook Triggers → Workflow Actions
 - **📖 Production Guide**: [PRODUCTION.md](PRODUCTION.md)
 - **✅ Deployment Checklist**: [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md)
 - **⚙️ Configuration Guide**: [CONFIGURATION.md](CONFIGURATION.md)
-- **📋 Project Details**: [ProjectDescription.md](ProjectDescription.md)
+- **📋 Project Details**: [PROJECT_DESCRIPTION.md](PROJECT_DESCRIPTION.md)
 - **🔧 Build System**: Use `make help` for all available commands
 
 ## 🏆 Production Certification

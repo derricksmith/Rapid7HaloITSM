@@ -163,4 +163,4 @@ export HALO_TENANT="example"
 
 ---
 
-**Critical**: Review `ProjectDescription.md` for complete API specifications, webhook configuration, and bidirectional sync implementation details before making changes.
+**Critical**: Review `PROJECT_DESCRIPTION.md` for complete API specifications, webhook configuration, and bidirectional sync implementation details before making changes.

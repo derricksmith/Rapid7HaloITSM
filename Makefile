@@ -104,7 +104,7 @@ package: export ## Create release package with documentation
 	cp README.md dist/$(PLUGIN_NAME)-$(VERSION)/
 	cp CONFIGURATION.md dist/$(PLUGIN_NAME)-$(VERSION)/
 	cp PRODUCTION.md dist/$(PLUGIN_NAME)-$(VERSION)/
-	cp ProjectDescription.md dist/$(PLUGIN_NAME)-$(VERSION)/
+	cp PROJECT_DESCRIPTION.md dist/$(PLUGIN_NAME)-$(VERSION)/
 	cd dist && tar -czf $(PLUGIN_NAME)-$(VERSION).tar.gz $(PLUGIN_NAME)-$(VERSION)/
 	@echo "Release package created: dist/$(PLUGIN_NAME)-$(VERSION).tar.gz"
 

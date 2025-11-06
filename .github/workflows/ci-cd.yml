@@ -340,7 +340,7 @@ jobs:
         echo "### Documentation" >> release_notes.md
         echo "- [Configuration Guide](https://github.com/${{ github.repository }}/blob/v${{ steps.version.outputs.version }}/CONFIGURATION.md)" >> release_notes.md
         echo "- [Production Deployment](https://github.com/${{ github.repository }}/blob/v${{ steps.version.outputs.version }}/PRODUCTION.md)" >> release_notes.md
-        echo "- [Project Description](https://github.com/${{ github.repository }}/blob/v${{ steps.version.outputs.version }}/ProjectDescription.md)" >> release_notes.md
+        echo "- [Project Description](https://github.com/${{ github.repository }}/blob/v${{ steps.version.outputs.version }}/PROJECT_DESCRIPTION.md)" >> release_notes.md
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
