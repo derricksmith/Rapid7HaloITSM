@@ -32,7 +32,7 @@ This checklist ensures the HaloITSM plugin is ready for production deployment in
 - [ ] User documentation complete and reviewed
 - [ ] Troubleshooting guide available
 - [ ] Operational runbook created
-- [ ] Disaster recovery procedures documented
+- [ ] HaloITSM outage procedures documented (manual fallback)
 - [ ] Change management process defined
 
 ### Infrastructure & Monitoring
@@ -147,7 +147,37 @@ Configure these webhooks in HaloITSM admin panel:
 - [ ] Status sync accuracy > 99%
 - [ ] User adoption targets met
 
-## 🚨 Rollback Plan
+## 🚨 Business Continuity Planning
+
+### HaloITSM Service Outage Procedures
+**Since most organizations only have one HaloITSM instance:**
+
+#### Preparation Checklist
+- [ ] Manual incident tracking spreadsheet template created
+- [ ] Alternative communication channels identified (Slack, Teams, email)
+- [ ] Stakeholder notification list maintained
+- [ ] Security operations team trained on manual procedures
+- [ ] Critical ticket template library documented
+
+#### During Outage Response Plan
+1. **Immediate (0-5 min)**:
+   - [ ] Disable HaloITSM plugin to prevent errors
+   - [ ] Activate manual incident tracking
+   - [ ] Notify security operations of service degradation
+   
+2. **Short-term (5-30 min)**:
+   - [ ] Switch to spreadsheet/manual ticket tracking
+   - [ ] Continue security investigations with manual documentation
+   - [ ] Monitor HaloITSM status and recovery estimates
+   - [ ] Update stakeholders on impact and timeline
+
+3. **Recovery (when service returns)**:
+   - [ ] Test HaloITSM connectivity before re-enabling
+   - [ ] Manually create tickets for incidents during outage
+   - [ ] Resume automated workflows gradually
+   - [ ] Validate all integrations working normally
+
+### Plugin Rollback Plan
 
 ### Immediate Rollback (< 5 minutes)
 1. Disable plugin in InsightConnect

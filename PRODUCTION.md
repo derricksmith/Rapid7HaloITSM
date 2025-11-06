@@ -248,6 +248,29 @@ log_config = {
 - Optimize data payload sizes
 
 ### Emergency Procedures
+
+#### HaloITSM Service Outage Response
+**Most organizations have a single HaloITSM instance - here's how to handle outages:**
+
+1. **Immediate Response (0-5 minutes)**:
+   - Disable HaloITSM plugin in InsightConnect to prevent errors
+   - Pause all workflows that create/update tickets
+   - Activate manual incident tracking procedures
+   - Notify security operations team of service degradation
+
+2. **Short-term Mitigation (5-30 minutes)**:
+   - Implement temporary ticket tracking (spreadsheet/alternative system)
+   - Continue security operations with manual documentation
+   - Monitor HaloITSM status and estimated recovery time
+   - Communicate status to stakeholders
+
+3. **Recovery Procedures (when HaloITSM returns)**:
+   - Re-enable plugin and test connectivity
+   - Manually create tickets for incidents tracked during outage
+   - Resume automated workflows
+   - Validate all systems are functioning normally
+
+#### Plugin Emergency Procedures
 1. **Plugin Disabled**: How to quickly disable plugin during incidents
 2. **Rollback Plan**: Steps to revert to previous plugin version  
 3. **Contact Information**: Key stakeholders and support contacts
