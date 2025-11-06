@@ -1,0 +1,633 @@
+plugin_spec_version: v2
+extension: plugin
+products:
+  - insightconnect
+name: haloitsm
+title: HaloITSM
+description: Manage tickets and automate workflows with HaloITSM service desk
+version: 1.0.0
+vendor: rapid7
+support: community
+status: []
+sdk:
+  type: slim
+  version: 5
+  user: nobody
+cloud_ready: true
+
+key_features:
+  - Create, update, and close tickets in HaloITSM
+  - Search and retrieve ticket information
+  - Assign tickets to agents and teams
+  - Receive real-time webhook notifications for ticket events
+  - Integrate with InsightIDR investigations and InsightVM remediation projects
+
+requirements:
+  - HaloITSM instance (cloud or on-premise)
+  - API credentials (Client ID and Secret)
+  - Network access to HaloITSM API endpoints
+
+version_history:
+  - 1.0.0 - Initial plugin release
+
+links:
+  - "[HaloITSM](https://haloitsm.com/)"
+  - "[HaloITSM API Documentation](https://haloservicedesk.com/apidoc/)"
+
+references:
+  - "[HaloITSM API Guide](https://haloitsm.com/guides/article/?kbid=929)"
+
+tags:
+  - haloitsm
+  - itsm
+  - ticketing
+  - service desk
+  - incident management
+
+hub_tags:
+  use_cases:
+    - remediation_management
+    - threat_detection_and_response
+  keywords:
+    - haloitsm
+    - tickets
+    - itsm
+    - service desk
+
+resources:
+  source_url: https://github.com/rapid7/insightconnect-plugins/tree/master/plugins/haloitsm
+  license_url: https://github.com/rapid7/insightconnect-plugins/blob/master/LICENSE
+  vendor_url: https://haloitsm.com
+
+connection:
+  client_id:
+    title: Client ID
+    description: OAuth2 Client ID for API authentication
+    type: credential_secret_key
+    required: true
+    example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+  client_secret:
+    title: Client Secret
+    description: OAuth2 Client Secret for API authentication
+    type: credential_secret_key
+    required: true
+    example: 9z8y7x6w5v4u3t2s1r0q
+  authorization_server:
+    title: Authorization Server
+    description: HaloITSM OAuth2 authorization server URL
+    type: string
+    required: true
+    example: https://example.haloitsm.com/auth
+  resource_server:
+    title: Resource Server
+    description: HaloITSM API resource server URL
+    type: string
+    required: true
+    example: https://example.haloitsm.com/api
+  tenant:
+    title: Tenant
+    description: HaloITSM tenant identifier
+    type: string
+    required: true
+    example: example
+  ssl_verify:
+    title: SSL Verify
+    description: Verify SSL certificate
+    type: boolean
+    required: false
+    default: true
+
+actions:
+  create_ticket:
+    title: Create Ticket
+    description: Create a new ticket in HaloITSM
+    input:
+      summary:
+        title: Summary
+        description: Ticket summary/title
+        type: string
+        required: true
+        example: Security incident detected
+      details:
+        title: Details
+        description: Detailed description of the ticket
+        type: string
+        required: true
+        example: Multiple failed login attempts detected from IP 192.168.1.100
+      tickettype_id:
+        title: Ticket Type ID
+        description: ID of the ticket type
+        type: integer
+        required: true
+        example: 1
+      priority_id:
+        title: Priority ID
+        description: Priority level ID
+        type: integer
+        required: false
+        example: 3
+      status_id:
+        title: Status ID
+        description: Initial status ID
+        type: integer
+        required: false
+        default: 1
+        example: 1
+      category_id:
+        title: Category ID
+        description: Ticket category ID
+        type: integer
+        required: false
+        example: 10
+      agent_id:
+        title: Agent ID
+        description: Assigned agent ID
+        type: integer
+        required: false
+        example: 100
+      team_id:
+        title: Team ID
+        description: Assigned team ID
+        type: integer
+        required: false
+        example: 5
+      site_id:
+        title: Site ID
+        description: Site/location ID
+        type: integer
+        required: false
+        example: 1
+      user_id:
+        title: User ID
+        description: End user ID (ticket requester)
+        type: integer
+        required: false
+        example: 500
+      customfields:
+        title: Custom Fields
+        description: Array of custom field objects
+        type: "[]object"
+        required: false
+    output:
+      ticket:
+        title: Ticket
+        description: Created ticket details
+        type: ticket
+        required: true
+      success:
+        title: Success
+        description: Was the operation successful
+        type: boolean
+        required: true
+
+  update_ticket:
+    title: Update Ticket
+    description: Update an existing ticket in HaloITSM
+    input:
+      ticket_id:
+        title: Ticket ID
+        description: ID of the ticket to update
+        type: integer
+        required: true
+        example: 12345
+      summary:
+        title: Summary
+        description: Updated ticket summary
+        type: string
+        required: false
+        example: Security incident - Resolved
+      details:
+        title: Details
+        description: Updated ticket details
+        type: string
+        required: false
+        example: Investigation completed. False positive confirmed.
+      status_id:
+        title: Status ID
+        description: Updated status ID
+        type: integer
+        required: false
+        example: 4
+      priority_id:
+        title: Priority ID
+        description: Updated priority ID
+        type: integer
+        required: false
+        example: 2
+      agent_id:
+        title: Agent ID
+        description: Updated assigned agent ID
+        type: integer
+        required: false
+        example: 101
+      customfields:
+        title: Custom Fields
+        description: Array of custom field objects to update
+        type: "[]object"
+        required: false
+    output:
+      ticket:
+        title: Ticket
+        description: Updated ticket details
+        type: ticket
+        required: true
+      success:
+        title: Success
+        description: Was the operation successful
+        type: boolean
+        required: true
+
+  close_ticket:
+    title: Close Ticket
+    description: Close a ticket in HaloITSM
+    input:
+      ticket_id:
+        title: Ticket ID
+        description: ID of the ticket to close
+        type: integer
+        required: true
+        example: 12345
+      resolution:
+        title: Resolution
+        description: Resolution notes
+        type: string
+        required: false
+        example: Issue resolved by security team
+      closed_status_id:
+        title: Closed Status ID
+        description: Status ID for closed state
+        type: integer
+        required: false
+        default: 5
+        example: 5
+    output:
+      ticket:
+        title: Ticket
+        description: Closed ticket details
+        type: ticket
+        required: true
+      success:
+        title: Success
+        description: Was the operation successful
+        type: boolean
+        required: true
+
+  get_ticket:
+    title: Get Ticket
+    description: Retrieve details of a specific ticket
+    input:
+      ticket_id:
+        title: Ticket ID
+        description: ID of the ticket to retrieve
+        type: integer
+        required: true
+        example: 12345
+      include_details:
+        title: Include Details
+        description: Include full ticket details
+        type: boolean
+        required: false
+        default: true
+    output:
+      ticket:
+        title: Ticket
+        description: Ticket details
+        type: ticket
+        required: true
+      found:
+        title: Found
+        description: Was the ticket found
+        type: boolean
+        required: true
+
+  search_tickets:
+    title: Search Tickets
+    description: Search for tickets using filters
+    input:
+      summary_contains:
+        title: Summary Contains
+        description: Search tickets where summary contains this text
+        type: string
+        required: false
+        example: Security incident
+      status_id:
+        title: Status ID
+        description: Filter by status ID
+        type: integer
+        required: false
+        example: 1
+      agent_id:
+        title: Agent ID
+        description: Filter by assigned agent ID
+        type: integer
+        required: false
+        example: 100
+      team_id:
+        title: Team ID
+        description: Filter by team ID
+        type: integer
+        required: false
+        example: 5
+      priority_id:
+        title: Priority ID
+        description: Filter by priority ID
+        type: integer
+        required: false
+        example: 3
+      created_after:
+        title: Created After
+        description: Filter tickets created after this date (ISO 8601)
+        type: date
+        required: false
+        example: "2025-11-01T00:00:00Z"
+      created_before:
+        title: Created Before
+        description: Filter tickets created before this date (ISO 8601)
+        type: date
+        required: false
+        example: "2025-11-06T23:59:59Z"
+      max_results:
+        title: Max Results
+        description: Maximum number of results to return
+        type: integer
+        required: false
+        default: 50
+        example: 50
+    output:
+      tickets:
+        title: Tickets
+        description: List of tickets matching search criteria
+        type: "[]ticket"
+        required: true
+      count:
+        title: Count
+        description: Number of tickets found
+        type: integer
+        required: true
+
+  add_comment:
+    title: Add Comment
+    description: Add a comment/note to a ticket
+    input:
+      ticket_id:
+        title: Ticket ID
+        description: ID of the ticket
+        type: integer
+        required: true
+        example: 12345
+      comment:
+        title: Comment
+        description: Comment text to add
+        type: string
+        required: true
+        example: Investigation in progress
+      is_private:
+        title: Is Private
+        description: Make this comment private (agent-only)
+        type: boolean
+        required: false
+        default: false
+    output:
+      success:
+        title: Success
+        description: Was the comment added successfully
+        type: boolean
+        required: true
+      comment_id:
+        title: Comment ID
+        description: ID of the created comment
+        type: integer
+        required: false
+
+  assign_ticket:
+    title: Assign Ticket
+    description: Assign a ticket to an agent or team
+    input:
+      ticket_id:
+        title: Ticket ID
+        description: ID of the ticket to assign
+        type: integer
+        required: true
+        example: 12345
+      agent_id:
+        title: Agent ID
+        description: Agent ID to assign ticket to
+        type: integer
+        required: false
+        example: 100
+      team_id:
+        title: Team ID
+        description: Team ID to assign ticket to
+        type: integer
+        required: false
+        example: 5
+      notify:
+        title: Notify
+        description: Send notification to assignee
+        type: boolean
+        required: false
+        default: true
+    output:
+      ticket:
+        title: Ticket
+        description: Updated ticket details
+        type: ticket
+        required: true
+      success:
+        title: Success
+        description: Was the assignment successful
+        type: boolean
+        required: true
+
+triggers:
+  ticket_created:
+    title: Ticket Created
+    description: Triggers when a new ticket is created in HaloITSM (webhook)
+    input:
+      tickettype_id:
+        title: Ticket Type ID
+        description: Only trigger for specific ticket type (optional)
+        type: integer
+        required: false
+        example: 1
+      priority_id:
+        title: Priority ID
+        description: Only trigger for specific priority (optional)
+        type: integer
+        required: false
+        example: 3
+    output:
+      ticket:
+        title: Ticket
+        description: Newly created ticket details
+        type: ticket
+        required: true
+
+  ticket_updated:
+    title: Ticket Updated
+    description: Triggers when a ticket is updated in HaloITSM (webhook)
+    input:
+      ticket_id:
+        title: Ticket ID
+        description: Only trigger for specific ticket ID (optional)
+        type: integer
+        required: false
+        example: 12345
+      status_changed:
+        title: Status Changed
+        description: Only trigger when status changes
+        type: boolean
+        required: false
+        default: false
+    output:
+      ticket:
+        title: Ticket
+        description: Updated ticket details
+        type: ticket
+        required: true
+      previous_status_id:
+        title: Previous Status ID
+        description: Previous status ID before update
+        type: integer
+        required: false
+
+  ticket_status_changed:
+    title: Ticket Status Changed
+    description: Triggers specifically when ticket status changes (webhook)
+    input:
+      ticket_id:
+        title: Ticket ID
+        description: Only trigger for specific ticket ID (optional)
+        type: integer
+        required: false
+        example: 12345
+      new_status_id:
+        title: New Status ID
+        description: Only trigger when status changes to this value (optional)
+        type: integer
+        required: false
+        example: 4
+    output:
+      ticket:
+        title: Ticket
+        description: Ticket details with new status
+        type: ticket
+        required: true
+      old_status_id:
+        title: Old Status ID
+        description: Previous status ID
+        type: integer
+        required: true
+      new_status_id:
+        title: New Status ID
+        description: New status ID
+        type: integer
+        required: true
+
+types:
+  ticket:
+    id:
+      title: ID
+      description: Ticket ID
+      type: integer
+      required: false
+    summary:
+      title: Summary
+      description: Ticket summary
+      type: string
+      required: false
+    details:
+      title: Details
+      description: Ticket details
+      type: string
+      required: false
+    tickettype_id:
+      title: Ticket Type ID
+      description: Ticket type identifier
+      type: integer
+      required: false
+    status_id:
+      title: Status ID
+      description: Current status ID
+      type: integer
+      required: false
+    status_name:
+      title: Status Name
+      description: Current status name
+      type: string
+      required: false
+    priority_id:
+      title: Priority ID
+      description: Priority level ID
+      type: integer
+      required: false
+    priority_name:
+      title: Priority Name
+      description: Priority level name
+      type: string
+      required: false
+    category_id:
+      title: Category ID
+      description: Category ID
+      type: integer
+      required: false
+    agent_id:
+      title: Agent ID
+      description: Assigned agent ID
+      type: integer
+      required: false
+    agent_name:
+      title: Agent Name
+      description: Assigned agent name
+      type: string
+      required: false
+    team_id:
+      title: Team ID
+      description: Assigned team ID
+      type: integer
+      required: false
+    team_name:
+      title: Team Name
+      description: Assigned team name
+      type: string
+      required: false
+    site_id:
+      title: Site ID
+      description: Site/location ID
+      type: integer
+      required: false
+    user_id:
+      title: User ID
+      description: End user ID
+      type: integer
+      required: false
+    user_name:
+      title: User Name
+      description: End user name
+      type: string
+      required: false
+    dateoccurred:
+      title: Date Occurred
+      description: When the incident occurred
+      type: date
+      required: false
+    datecreated:
+      title: Date Created
+      description: When the ticket was created
+      type: date
+      required: false
+    datemodified:
+      title: Date Modified
+      description: When the ticket was last modified
+      type: date
+      required: false
+    customfields:
+      title: Custom Fields
+      description: Custom field values
+      type: "[]object"
+      required: false
+    url:
+      title: URL
+      description: Direct URL to ticket in HaloITSM
+      type: string
+      required: false

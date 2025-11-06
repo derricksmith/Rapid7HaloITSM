@@ -1,0 +1,3 @@
+# HaloITSM Plugin Requirements
+insightconnect-plugin-runtime>=5.0.0
+requests>=2.25.1

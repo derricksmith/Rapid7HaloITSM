@@ -1,0 +1,92 @@
+import insightconnect_plugin_runtime
+from .schema import CreateTicketInput, CreateTicketOutput, Input, Output, Component
+from insightconnect_plugin_runtime.exceptions import PluginException
+
+
+class CreateTicket(insightconnect_plugin_runtime.Action):
+    def __init__(self):
+        super(self.__class__, self).__init__(
+            name="create_ticket",
+            description=Component.DESCRIPTION,
+            input=CreateTicketInput(),
+            output=CreateTicketOutput()
+        )
+
+    def run(self, params={}):
+        """
+        Create a new ticket in HaloITSM
+        """
+        self.logger.info("CreateTicket: Starting ticket creation")
+        
+        # Build ticket data from input parameters
+        ticket_data = {
+            "summary": params.get(Input.SUMMARY),
+            "details": params.get(Input.DETAILS),
+            "tickettype_id": params.get(Input.TICKETTYPE_ID),
+            "actioncode": 0  # 0 = New ticket
+        }
+        
+        # Add optional fields if provided
+        optional_fields = [
+            Input.PRIORITY_ID, Input.STATUS_ID, Input.CATEGORY_ID,
+            Input.AGENT_ID, Input.TEAM_ID, Input.SITE_ID, Input.USER_ID
+        ]
+        
+        for field in optional_fields:
+            value = params.get(field)
+            if value is not None:
+                # Convert field names from snake_case to match HaloITSM API
+                api_field = field.replace("_", "")
+                ticket_data[api_field] = value
+        
+        # Add custom fields if provided
+        custom_fields = params.get(Input.CUSTOMFIELDS, [])
+        if custom_fields:
+            ticket_data["customfields"] = custom_fields
+        
+        try:
+            # Create ticket using API client
+            result = self.connection.client.create_ticket(ticket_data)
+            
+            self.logger.info(f"CreateTicket: Ticket created successfully with ID {result.get('id')}")
+            
+            # Build output
+            return {
+                Output.TICKET: self._normalize_ticket(result),
+                Output.SUCCESS: True
+            }
+            
+        except Exception as e:
+            self.logger.error(f"CreateTicket: Failed to create ticket: {str(e)}")
+            raise PluginException(
+                cause="Failed to create ticket",
+                assistance=str(e)
+            )
+    
+    def _normalize_ticket(self, ticket_data):
+        """
+        Normalize ticket data to match output schema
+        """
+        return {
+            "id": ticket_data.get("id"),
+            "summary": ticket_data.get("summary"),
+            "details": ticket_data.get("details"),
+            "tickettype_id": ticket_data.get("tickettype_id"),
+            "status_id": ticket_data.get("status_id"),
+            "status_name": ticket_data.get("status", {}).get("name") if isinstance(ticket_data.get("status"), dict) else None,
+            "priority_id": ticket_data.get("priority_id"),
+            "priority_name": ticket_data.get("priority", {}).get("name") if isinstance(ticket_data.get("priority"), dict) else None,
+            "category_id": ticket_data.get("category_id"),
+            "agent_id": ticket_data.get("agent_id"),
+            "agent_name": ticket_data.get("agent", {}).get("name") if isinstance(ticket_data.get("agent"), dict) else None,
+            "team_id": ticket_data.get("team_id"),
+            "team_name": ticket_data.get("team", {}).get("name") if isinstance(ticket_data.get("team"), dict) else None,
+            "site_id": ticket_data.get("site_id"),
+            "user_id": ticket_data.get("user_id"),
+            "user_name": ticket_data.get("user", {}).get("name") if isinstance(ticket_data.get("user"), dict) else None,
+            "dateoccurred": ticket_data.get("dateoccurred"),
+            "datecreated": ticket_data.get("datecreated"),
+            "datemodified": ticket_data.get("datemodified"),
+            "customfields": ticket_data.get("customfields", []),
+            "url": ticket_data.get("url")
+        }
