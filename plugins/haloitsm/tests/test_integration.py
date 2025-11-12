@@ -1,13 +1,17 @@
+import sys
+import os
+sys.path.append(os.path.abspath('../'))
+
 import os
 import json
 from komand_haloitsm.connection.connection import Connection
-from komand_haloitsm.actions.create_ticket import CreateTicket
-from komand_haloitsm.actions.update_ticket import UpdateTicket
-from komand_haloitsm.actions.get_ticket import GetTicket
-from komand_haloitsm.actions.add_comment import AddComment
-from komand_haloitsm.actions.assign_ticket import AssignTicket
-from komand_haloitsm.actions.close_ticket import CloseTicket
-from komand_haloitsm.actions.search_tickets import SearchTickets
+from komand_haloitsm.actions.create_ticket.action import CreateTicket
+from komand_haloitsm.actions.update_ticket.action import UpdateTicket
+from komand_haloitsm.actions.get_ticket.action import GetTicket
+from komand_haloitsm.actions.add_comment.action import AddComment
+from komand_haloitsm.actions.assign_ticket.action import AssignTicket
+from komand_haloitsm.actions.close_ticket.action import CloseTicket
+from komand_haloitsm.actions.search_tickets.action import SearchTickets
 
 
 class TestHaloITSMIntegration:

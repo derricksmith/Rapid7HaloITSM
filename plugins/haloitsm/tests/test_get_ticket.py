@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.append(os.path.abspath('../'))
+
 import unittest
 from unittest.mock import Mock, patch
 from komand_haloitsm.actions.get_ticket.action import GetTicket
