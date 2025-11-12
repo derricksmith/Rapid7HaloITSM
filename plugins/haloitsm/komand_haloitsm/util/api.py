@@ -210,20 +210,60 @@ class HaloITSMAPI:
         )
         return True
     
-    def add_comment(self, ticket_id: int, comment: str, is_private: bool = False) -> Dict[str, Any]:
-        """Add a comment to a ticket"""
-        comment_data = {
-            "ticket_id": ticket_id,
-            "note": comment,
-            "isprivate": is_private
-        }
-        
+    def add_comment(self, note_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Add a comment/note to a ticket"""
         response = self.make_request(
             method="POST",
             endpoint="/ticketnotes",
-            json_data=[comment_data]
+            json_data=[note_data]
         )
         
         if isinstance(response, list) and len(response) > 0:
             return response[0]
         return response
+    
+    def _normalize_ticket(self, ticket: Dict[str, Any]) -> Dict[str, Any]:
+        """Normalize ticket data to consistent format"""
+        if not ticket:
+            return {}
+        
+        normalized = {
+            "id": ticket.get("id"),
+            "summary": ticket.get("summary", ""),
+            "details": ticket.get("details", ""),
+            "status": self._get_nested_name(ticket.get("status")),
+            "status_id": ticket.get("status_id"),
+            "priority": self._get_nested_name(ticket.get("priority")),
+            "priority_id": ticket.get("priority_id"),
+            "ticket_type": self._get_nested_name(ticket.get("tickettype")),
+            "ticket_type_id": ticket.get("tickettype_id"),
+            "agent": self._get_nested_name(ticket.get("agent")),
+            "agent_id": ticket.get("agent_id"),
+            "team": self._get_nested_name(ticket.get("team")),
+            "team_id": ticket.get("team_id"),
+            "created_date": ticket.get("dateoccurred", ""),
+            "last_updated": ticket.get("dateupdated", ""),
+            "client": self._get_nested_name(ticket.get("client")),
+            "client_id": ticket.get("client_id"),
+            "site": self._get_nested_name(ticket.get("site")),
+            "site_id": ticket.get("site_id"),
+            "user": self._get_nested_name(ticket.get("user")),
+            "user_id": ticket.get("user_id"),
+            "category_1": ticket.get("category_1", ""),
+            "category_2": ticket.get("category_2", ""),
+            "category_3": ticket.get("category_3", ""),
+            "category_4": ticket.get("category_4", ""),
+            "resolution": ticket.get("resolution", ""),
+            "url": f"{self.resource_server.replace('/api', '')}/tickets/{ticket.get('id', '')}"
+        }
+        
+        # Remove None values
+        return {k: v for k, v in normalized.items() if v is not None}
+    
+    def _get_nested_name(self, obj: Any) -> str:
+        """Extract name from nested object or return string as-is"""
+        if isinstance(obj, dict):
+            return obj.get("name", "")
+        elif isinstance(obj, str):
+            return obj
+        return ""

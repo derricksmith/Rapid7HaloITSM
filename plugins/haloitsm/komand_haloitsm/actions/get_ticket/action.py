@@ -23,6 +23,13 @@ class GetTicket(insightconnect_plugin_runtime.Action):
                 assistance="Please provide a valid ticket ID"
             )
         
+        # Validate ticket ID is a number
+        if not isinstance(ticket_id, int) or ticket_id <= 0:
+            raise insightconnect_plugin_runtime.PluginException(
+                cause="Invalid ticket ID",
+                assistance="Ticket ID must be a positive integer"
+            )
+        
         try:
             # Get ticket from HaloITSM API
             ticket = self.connection.client.get_ticket(ticket_id)
@@ -35,6 +42,8 @@ class GetTicket(insightconnect_plugin_runtime.Action):
             
             # Normalize the ticket data
             normalized_ticket = self.connection.client._normalize_ticket(ticket)
+            
+            self.logger.info(f"Successfully retrieved ticket {ticket_id}")
             
             return {
                 Output.TICKET: normalized_ticket,
