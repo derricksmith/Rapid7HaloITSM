@@ -56,15 +56,20 @@ class AddComment(insightconnect_plugin_runtime.Action):
             updated_ticket = self.connection.client.get_ticket(ticket_id)
             normalized_ticket = self.connection.client._normalize_ticket(updated_ticket)
             
-            self.logger.info(f"Successfully added comment to ticket {ticket_id}")
+            if self.logger:
+                self.logger.info(f"Successfully added comment to ticket {ticket_id}")
             
             return {
                 Output.TICKET: normalized_ticket,
                 Output.SUCCESS: True
             }
             
+        except insightconnect_plugin_runtime.PluginException:
+            # Re-raise PluginExceptions as-is
+            raise
         except Exception as e:
-            self.logger.error(f"Failed to add comment to ticket {ticket_id}: {str(e)}")
+            if self.logger:
+                self.logger.error(f"Failed to add comment to ticket {ticket_id}: {str(e)}")
             raise insightconnect_plugin_runtime.PluginException(
                 cause=f"Failed to add comment to ticket {ticket_id}",
                 assistance=str(e)

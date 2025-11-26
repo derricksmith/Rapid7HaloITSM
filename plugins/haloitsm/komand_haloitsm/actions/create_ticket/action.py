@@ -67,6 +67,9 @@ class CreateTicket(insightconnect_plugin_runtime.Action):
                 Output.SUCCESS: True
             }
             
+        except PluginException:
+            # Re-raise PluginExceptions without modification
+            raise
         except Exception as e:
             self.logger.error(f"CreateTicket: Failed to create ticket: {str(e)}")
             raise PluginException(

@@ -21,8 +21,9 @@ class HaloITSMAPI:
     ):
         self.client_id = client_id
         self.client_secret = client_secret
-        self.auth_server = auth_server.rstrip('/')
-        self.resource_server = resource_server.rstrip('/')
+        # Safe rstrip - check for None first
+        self.auth_server = auth_server.rstrip('/') if auth_server else None
+        self.resource_server = resource_server.rstrip('/') if resource_server else None
         self.tenant = tenant
         self.ssl_verify = ssl_verify
         self.logger = logger
@@ -136,6 +137,20 @@ class HaloITSMAPI:
                 except ValueError:
                     return response.text
                     
+            except requests.exceptions.HTTPError as e:
+                # HTTPError MUST be first (subclass of RequestException)
+                # Use e.response to safely access response data
+                if self.logger:
+                    status = e.response.status_code if e.response else "unknown"
+                    self.logger.warning(f"HTTP error on attempt {attempt + 1}/{retry_count}: {status}")
+                if attempt == retry_count - 1:
+                    status = e.response.status_code if e.response else "unknown"
+                    text = e.response.text if e.response else str(e)
+                    raise PluginException(
+                        cause=f"HTTP {status} error",
+                        assistance=f"HaloITSM API returned an error: {text}",
+                        data=str(e)
+                    )
             except requests.exceptions.Timeout as e:
                 if self.logger:
                     self.logger.warning(f"Request timeout on attempt {attempt + 1}/{retry_count}")
@@ -143,15 +158,6 @@ class HaloITSMAPI:
                     raise PluginException(
                         cause="Request timeout",
                         assistance=f"HaloITSM API did not respond within {timeout} seconds. Check network connectivity and server URL.",
-                        data=str(e)
-                    )
-            except requests.exceptions.HTTPError as e:
-                if self.logger:
-                    self.logger.warning(f"HTTP error on attempt {attempt + 1}/{retry_count}: {response.status_code}")
-                if attempt == retry_count - 1:
-                    raise PluginException(
-                        cause=f"HTTP {response.status_code} error",
-                        assistance=f"HaloITSM API returned an error: {response.text}",
                         data=str(e)
                     )
             except requests.exceptions.RequestException as e:
@@ -247,38 +253,47 @@ class HaloITSMAPI:
         if not ticket:
             return {}
         
-        normalized = {
-            "id": ticket.get("id"),
-            "summary": ticket.get("summary", ""),
-            "details": ticket.get("details", ""),
-            "status": self._get_nested_name(ticket.get("status")),
-            "status_id": ticket.get("status_id"),
-            "priority": self._get_nested_name(ticket.get("priority")),
-            "priority_id": ticket.get("priority_id"),
-            "ticket_type": self._get_nested_name(ticket.get("tickettype")),
-            "ticket_type_id": ticket.get("tickettype_id"),
-            "agent": self._get_nested_name(ticket.get("agent")),
-            "agent_id": ticket.get("agent_id"),
-            "team": self._get_nested_name(ticket.get("team")),
-            "team_id": ticket.get("team_id"),
-            "created_date": ticket.get("dateoccurred", ""),
-            "last_updated": ticket.get("dateupdated", ""),
-            "client": self._get_nested_name(ticket.get("client")),
-            "client_id": ticket.get("client_id"),
-            "site": self._get_nested_name(ticket.get("site")),
-            "site_id": ticket.get("site_id"),
-            "user": self._get_nested_name(ticket.get("user")),
-            "user_id": ticket.get("user_id"),
-            "category_1": ticket.get("category_1", ""),
-            "category_2": ticket.get("category_2", ""),
-            "category_3": ticket.get("category_3", ""),
-            "category_4": ticket.get("category_4", ""),
-            "resolution": ticket.get("resolution", ""),
-            "url": f"{self.resource_server.replace('/api', '')}/tickets/{ticket.get('id', '')}"
-        }
-        
-        # Remove None values
-        return {k: v for k, v in normalized.items() if v is not None}
+        try:
+            normalized = {
+                "id": ticket.get("id"),
+                "summary": ticket.get("summary", ""),
+                "details": ticket.get("details", ""),
+                "status": self._get_nested_name(ticket.get("status")),
+                "status_id": ticket.get("status_id"),
+                "priority": self._get_nested_name(ticket.get("priority")),
+                "priority_id": ticket.get("priority_id"),
+                "ticket_type": self._get_nested_name(ticket.get("tickettype")),
+                "ticket_type_id": ticket.get("tickettype_id"),
+                "agent": self._get_nested_name(ticket.get("agent")),
+                "agent_id": ticket.get("agent_id"),
+                "team": self._get_nested_name(ticket.get("team")),
+                "team_id": ticket.get("team_id"),
+                "created_date": ticket.get("dateoccurred", ""),
+                "last_updated": ticket.get("dateupdated", ""),
+                "client": self._get_nested_name(ticket.get("client")),
+                "client_id": ticket.get("client_id"),
+                "site": self._get_nested_name(ticket.get("site")),
+                "site_id": ticket.get("site_id"),
+                "user": self._get_nested_name(ticket.get("user")),
+                "user_id": ticket.get("user_id"),
+                "category_1": ticket.get("category_1", ""),
+                "category_2": ticket.get("category_2", ""),
+                "category_3": ticket.get("category_3", ""),
+                "category_4": ticket.get("category_4", ""),
+                "resolution": ticket.get("resolution", ""),
+                "url": f"{self.resource_server.replace('/api', '') if self.resource_server else ''}/tickets/{ticket.get('id', '')}"
+            }
+            
+            # Remove None values
+            return {k: v for k, v in normalized.items() if v is not None}
+        except Exception as e:
+            if self.logger:
+                self.logger.error(f"Error normalizing ticket: {str(e)}")
+            # Return minimal ticket data if normalization fails
+            return {
+                "id": ticket.get("id") if isinstance(ticket, dict) else None,
+                "summary": ticket.get("summary", "") if isinstance(ticket, dict) else str(ticket)
+            }
     
     def _get_nested_name(self, obj: Any) -> str:
         """Extract name from nested object or return string as-is"""
