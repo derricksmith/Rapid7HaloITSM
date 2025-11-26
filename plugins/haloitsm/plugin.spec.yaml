@@ -63,7 +63,7 @@ connection:
   client_id:
     title: Client ID
     description: OAuth2 Client ID for API authentication
-    type: credential_secret_key
+    type: string
     required: true
     example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
   client_secret:
