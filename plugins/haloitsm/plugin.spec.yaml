@@ -6,7 +6,7 @@ name: haloitsm
 title: HaloITSM
 description: Manage tickets and automate workflows with HaloITSM service desk
 version: 1.0.0
-vendor: rapid7
+vendor: derricksmith
 support: community
 status: []
 sdk:

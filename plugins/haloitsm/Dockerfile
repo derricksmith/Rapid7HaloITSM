@@ -1,13 +1,20 @@
-FROM rapid7/insightconnect-python-3-slim-plugin:5.0.0
+FROM rapid7/insightconnect-python-3-slim-plugin:5
 
-# Copy plugin source
+LABEL organization=derricksmith
+LABEL sdk=python
+
 WORKDIR /python/src
-ADD ./komand_haloitsm /python/src/komand_haloitsm
+
 ADD ./plugin.spec.yaml /plugin.spec.yaml
+ADD ./requirements.txt /python/src/requirements.txt
 
-# Install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-# Set plugin entry point
-ENTRYPOINT ["/usr/local/bin/python3", "/python/src/komand_haloitsm/bin/komand_haloitsm"]
+ADD . /python/src
+
+RUN python setup.py build && python setup.py install
+
+# User to run plugin code
+USER nobody
+
+ENTRYPOINT ["/usr/local/bin/komand_haloitsm"]

@@ -1,80 +1,79 @@
 #!/usr/bin/env python3
 """
 Simple plugin builder for HaloITSM
-Creates a .plg file (TAR.GZ archive) with the required structure
+Builds Docker image and exports as .plg file (gzipped Docker image)
 """
 import os
-import tarfile
+import subprocess
 import yaml
 from pathlib import Path
 
 def build_plugin():
-    """Build the plugin .plg file"""
+    """Build the plugin Docker image and export as .plg file"""
     
     # Read plugin spec to get version
     with open('plugin.spec.yaml', 'r') as f:
         spec = yaml.safe_load(f)
     
     plugin_name = spec['name']
+    vendor = spec['vendor']
     version = spec['version']
-    output_file = f"{plugin_name}-{version}.plg"
+    docker_image = f"{vendor}/{plugin_name}:{version}"
+    output_file = f"{vendor}_{plugin_name}_{version}.plg"
     
     print(f"Building {plugin_name} v{version}...")
-    print(f"Format: Uncompressed TAR archive")
+    print(f"Docker image: {docker_image}")
+    print(f"Output: {output_file}")
     
-    # Files and directories to include
-    include_patterns = [
-        'plugin.spec.yaml',
-        'setup.py',
-        'help.md',
-        'CONFIGURATION.md',
-        'Dockerfile',
-        'requirements.txt',
-        'komand_haloitsm/**/*.py',
-        'komand_haloitsm/**/*.yaml',
-    ]
     
-    # Create plain TAR file (no compression) - InsightConnect expects uncompressed tar
-    with tarfile.open(output_file, 'w') as tar:
-        # Add plugin.spec.yaml
-        tar.add('plugin.spec.yaml')
-        print(f"  ✓ Added plugin.spec.yaml")
-        
-        # Add setup.py
-        if os.path.exists('setup.py'):
-            tar.add('setup.py')
-            print(f"  ✓ Added setup.py")
-        
-        # Add help.md
-        if os.path.exists('help.md'):
-            tar.add('help.md')
-            print(f"  ✓ Added help.md")
-            
-        # Add CONFIGURATION.md
-        if os.path.exists('CONFIGURATION.md'):
-            tar.add('CONFIGURATION.md')
-            print(f"  ✓ Added CONFIGURATION.md")
-        
-        # Add Dockerfile
-        if os.path.exists('Dockerfile'):
-            tar.add('Dockerfile')
-            print(f"  ✓ Added Dockerfile")
-            
-        # Add requirements.txt
-        if os.path.exists('requirements.txt'):
-            tar.add('requirements.txt')
-            print(f"  ✓ Added requirements.txt")
-        
-        # Add all Python files from komand_haloitsm
-        base_path = Path('komand_haloitsm')
-        if base_path.exists():
-            tar.add(str(base_path), recursive=True)
-            print(f"  ✓ Added komand_haloitsm directory with all files")
+    # Step 1: Build Docker image
+    print(f"\n[1/3] Building Docker image...")
+    build_cmd = ['sudo', 'docker', 'build', '-t', docker_image, '.']
+    result = subprocess.run(build_cmd, capture_output=True, text=True)
+    
+    if result.returncode != 0:
+        print(f"❌ Docker build failed:")
+        print(result.stderr)
+        return None
+    
+    print(f"  ✓ Docker image built successfully")
+    
+    # Step 2: Save Docker image to tar file
+    print(f"\n[2/3] Exporting Docker image...")
+    temp_tar = f"{vendor}_{plugin_name}_{version}_temp.tar"
+    save_cmd = ['sudo', 'docker', 'save', docker_image]
+    
+    with open(temp_tar, 'wb') as f:
+        result = subprocess.run(save_cmd, stdout=f, stderr=subprocess.PIPE, text=False)
+    
+    if result.returncode != 0:
+        print(f"❌ Docker save failed:")
+        print(result.stderr.decode())
+        return None
+    
+    print(f"  ✓ Docker image exported to tar")
+    
+    # Step 3: Compress with gzip
+    print(f"\n[3/3] Compressing...")
+    gzip_cmd = ['gzip', '-f', temp_tar]
+    result = subprocess.run(gzip_cmd, capture_output=True, text=True)
+    
+    if result.returncode != 0:
+        print(f"❌ Gzip compression failed:")
+        print(result.stderr)
+        return None
+    
+    # Rename to .plg extension
+    gzipped_file = f"{temp_tar}.gz"
+    if os.path.exists(gzipped_file):
+        os.rename(gzipped_file, output_file)
     
     file_size = os.path.getsize(output_file)
+    print(f"  ✓ Compressed to .plg format")
+    
     print(f"\n✅ Plugin built successfully!")
     print(f"   Output: {output_file}")
-    print(f"   Size: {file_size:,} bytes ({file_size/1024:.1f} KB)")
+    print(f"   Size: {file_size:,} bytes ({file_size/1024/1024:.1f} MB)")
     print(f"\n   Ready to upload to Rapid7 InsightConnect!")
     
     return output_file
