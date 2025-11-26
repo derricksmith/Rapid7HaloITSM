@@ -87,7 +87,8 @@ class HaloITSMAPI:
         endpoint: str,
         params: Optional[Dict[str, Any]] = None,
         json_data: Optional[Any] = None,
-        retry_count: int = 3
+        retry_count: int = 3,
+        timeout: int = 30
     ) -> Any:
         """
         Make an authenticated request to HaloITSM API
@@ -100,8 +101,14 @@ class HaloITSMAPI:
             "Content-Type": "application/json"
         }
         
+        if self.logger:
+            self.logger.info(f"Making {method} request to {url}")
+        
         for attempt in range(retry_count):
             try:
+                if self.logger:
+                    self.logger.info(f"Request attempt {attempt + 1}/{retry_count}")
+                
                 response = requests.request(
                     method=method,
                     url=url,
@@ -109,7 +116,7 @@ class HaloITSMAPI:
                     params=params,
                     json=json_data,
                     verify=self.ssl_verify,
-                    timeout=60
+                    timeout=timeout
                 )
                 
                 # Handle 401 - token may have expired
@@ -129,7 +136,18 @@ class HaloITSMAPI:
                 except ValueError:
                     return response.text
                     
+            except requests.exceptions.Timeout as e:
+                if self.logger:
+                    self.logger.warning(f"Request timeout on attempt {attempt + 1}/{retry_count}")
+                if attempt == retry_count - 1:
+                    raise PluginException(
+                        cause="Request timeout",
+                        assistance=f"HaloITSM API did not respond within {timeout} seconds. Check network connectivity and server URL.",
+                        data=str(e)
+                    )
             except requests.exceptions.HTTPError as e:
+                if self.logger:
+                    self.logger.warning(f"HTTP error on attempt {attempt + 1}/{retry_count}: {response.status_code}")
                 if attempt == retry_count - 1:
                     raise PluginException(
                         cause=f"HTTP {response.status_code} error",
@@ -137,6 +155,8 @@ class HaloITSMAPI:
                         data=str(e)
                     )
             except requests.exceptions.RequestException as e:
+                if self.logger:
+                    self.logger.warning(f"Request error on attempt {attempt + 1}/{retry_count}: {str(e)}")
                 if attempt == retry_count - 1:
                     raise PluginException(
                         cause="Request failed",

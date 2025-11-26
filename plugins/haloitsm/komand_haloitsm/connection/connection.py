@@ -19,9 +19,17 @@ class Connection(insightconnect_plugin_runtime.Connection):
         """
         self.logger.info("Connect: Connecting to HaloITSM API")
         
+        if not params:
+            raise PluginException(
+                cause="No connection parameters provided",
+                assistance="Connection parameters are required"
+            )
+        
         # Store connection parameters
         self.client_id = params.get(Input.CLIENT_ID)
-        self.client_secret = params.get(Input.CLIENT_SECRET, {}).get("secretKey")
+        # Handle credential_secret_key type for client_secret
+        client_secret_obj = params.get(Input.CLIENT_SECRET)
+        self.client_secret = client_secret_obj.get("secretKey") if client_secret_obj else None
         self.auth_server = params.get(Input.AUTHORIZATION_SERVER)
         self.resource_server = params.get(Input.RESOURCE_SERVER)
         self.tenant = params.get(Input.TENANT)
@@ -60,19 +68,37 @@ class Connection(insightconnect_plugin_runtime.Connection):
         Test the connection by attempting to authenticate and make a simple API call
         """
         try:
-            # Attempt to get OAuth2 token
-            self.client.get_access_token()
+            self.logger.info("Connection test: Starting authentication test")
             
-            # Test API access with a simple request
+            # Attempt to get OAuth2 token
+            token = self.client.get_access_token()
+            
+            if not token:
+                raise ConnectionTestException(
+                    cause="Failed to obtain access token",
+                    assistance="OAuth2 authentication returned no token"
+                )
+            
+            self.logger.info("Connection test: Token obtained successfully")
+            
+            # Test API access with a simple request (use tickettypes which is lighter than tickets)
+            self.logger.info("Connection test: Testing API access")
             response = self.client.make_request(
                 method="GET",
-                endpoint="/tickets",
-                params={"count": 1}
+                endpoint="/tickettypes",
+                params={"count": 1},
+                timeout=20,
+                retry_count=1
             )
+            
+            self.logger.info("Connection test: API call successful")
             
             return {"success": True}
             
+        except ConnectionTestException:
+            raise
         except Exception as e:
+            self.logger.error(f"Connection test failed: {str(e)}")
             raise ConnectionTestException(
                 cause="Connection test failed",
                 assistance=f"Unable to connect to HaloITSM API: {str(e)}",
