@@ -20,7 +20,7 @@ class Connection(insightconnect_plugin_runtime.Connection):
         self.logger.info("Connect: Connecting to HaloITSM API")
         
         # Store connection parameters
-        self.client_id = params.get(Input.CLIENT_ID, {}).get("secretKey")
+        self.client_id = params.get(Input.CLIENT_ID)
         self.client_secret = params.get(Input.CLIENT_SECRET, {}).get("secretKey")
         self.auth_server = params.get(Input.AUTHORIZATION_SERVER)
         self.resource_server = params.get(Input.RESOURCE_SERVER)

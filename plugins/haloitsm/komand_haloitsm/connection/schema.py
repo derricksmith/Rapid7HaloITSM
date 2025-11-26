@@ -10,7 +10,7 @@ class ConnectionSchema(insightconnect_plugin_runtime.Input):
       "title": "Variables",
       "properties": {
         "client_id": {
-          "type": "credential_secret_key",
+          "type": "string",
           "title": "Client ID",
           "description": "OAuth2 Client ID for API authentication",
           "order": 1
