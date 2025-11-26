@@ -20,6 +20,7 @@ def build_plugin():
     output_file = f"{plugin_name}-{version}.plg"
     
     print(f"Building {plugin_name} v{version}...")
+    print(f"Format: Uncompressed TAR archive")
     
     # Files and directories to include
     include_patterns = [
@@ -33,8 +34,8 @@ def build_plugin():
         'komand_haloitsm/**/*.yaml',
     ]
     
-    # Create TAR.GZ file
-    with tarfile.open(output_file, 'w:gz') as tar:
+    # Create plain TAR file (no compression) - InsightConnect expects uncompressed tar
+    with tarfile.open(output_file, 'w') as tar:
         # Add plugin.spec.yaml
         tar.add('plugin.spec.yaml')
         print(f"  ✓ Added plugin.spec.yaml")
