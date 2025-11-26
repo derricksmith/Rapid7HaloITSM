@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
 Simple plugin builder for HaloITSM
-Creates a .plg file (ZIP archive) with the required structure
+Creates a .plg file (TAR.GZ archive) with the required structure
 """
 import os
-import zipfile
+import tarfile
 import yaml
 from pathlib import Path
 
@@ -33,49 +33,42 @@ def build_plugin():
         'komand_haloitsm/**/*.yaml',
     ]
     
-    # Create ZIP file
-    with zipfile.ZipFile(output_file, 'w', zipfile.ZIP_DEFLATED) as zipf:
+    # Create TAR.GZ file
+    with tarfile.open(output_file, 'w:gz') as tar:
         # Add plugin.spec.yaml
-        zipf.write('plugin.spec.yaml')
+        tar.add('plugin.spec.yaml')
         print(f"  ✓ Added plugin.spec.yaml")
         
         # Add setup.py
         if os.path.exists('setup.py'):
-            zipf.write('setup.py')
+            tar.add('setup.py')
             print(f"  ✓ Added setup.py")
         
         # Add help.md
         if os.path.exists('help.md'):
-            zipf.write('help.md')
+            tar.add('help.md')
             print(f"  ✓ Added help.md")
             
         # Add CONFIGURATION.md
         if os.path.exists('CONFIGURATION.md'):
-            zipf.write('CONFIGURATION.md')
+            tar.add('CONFIGURATION.md')
             print(f"  ✓ Added CONFIGURATION.md")
         
         # Add Dockerfile
         if os.path.exists('Dockerfile'):
-            zipf.write('Dockerfile')
+            tar.add('Dockerfile')
             print(f"  ✓ Added Dockerfile")
             
         # Add requirements.txt
         if os.path.exists('requirements.txt'):
-            zipf.write('requirements.txt')
+            tar.add('requirements.txt')
             print(f"  ✓ Added requirements.txt")
         
         # Add all Python files from komand_haloitsm
         base_path = Path('komand_haloitsm')
         if base_path.exists():
-            for py_file in base_path.rglob('*.py'):
-                zipf.write(str(py_file))
-            print(f"  ✓ Added komand_haloitsm Python files")
-            
-            # Add schema files
-            for schema_file in base_path.rglob('schema.py'):
-                if str(schema_file) not in zipf.namelist():
-                    zipf.write(str(schema_file))
-            print(f"  ✓ Added schema files")
+            tar.add(str(base_path), recursive=True)
+            print(f"  ✓ Added komand_haloitsm directory with all files")
     
     file_size = os.path.getsize(output_file)
     print(f"\n✅ Plugin built successfully!")
