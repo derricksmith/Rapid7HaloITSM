@@ -15,6 +15,9 @@ class CloseTicket(insightconnect_plugin_runtime.Action):
 
     def run(self, params={}):
         """Close a HaloITSM ticket with resolution details"""
+        # Ensure API client is initialized (lazy initialization)
+        self.connection._ensure_client()
+        
         ticket_id = params.get(Input.TICKET_ID)
         resolution = params.get(Input.RESOLUTION, "")
         status_id = params.get(Input.STATUS_ID, 4)  # Default to "Resolved" status

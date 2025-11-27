@@ -15,6 +15,9 @@ class AssignTicket(insightconnect_plugin_runtime.Action):
 
     def run(self, params={}):
         """Assign a HaloITSM ticket to an agent or team"""
+        # Ensure API client is initialized (lazy initialization)
+        self.connection._ensure_client()
+        
         ticket_id = params.get(Input.TICKET_ID)
         agent_id = params.get(Input.AGENT_ID)
         team_id = params.get(Input.TEAM_ID)

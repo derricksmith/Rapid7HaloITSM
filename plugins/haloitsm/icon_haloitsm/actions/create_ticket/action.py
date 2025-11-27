@@ -16,6 +16,9 @@ class CreateTicket(insightconnect_plugin_runtime.Action):
         """
         Create a new ticket in HaloITSM
         """
+        # Ensure API client is initialized (lazy initialization)
+        self.connection._ensure_client()
+        
         self.logger.info("CreateTicket: Starting ticket creation")
         
         # Build ticket data from input parameters

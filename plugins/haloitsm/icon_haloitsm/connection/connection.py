@@ -15,11 +15,11 @@ class Connection(insightconnect_plugin_runtime.Connection):
 
     def connect(self, params: Dict[str, Any] = None) -> None:
         """
-        Establish connection to HaloITSM API using OAuth2
+        Store connection parameters for lazy initialization
+        NO network calls, NO API client initialization
         """
         try:
-            self.logger.info("Connect: Starting connection initialization")
-            self.logger.info(f"Connect: Received params type: {type(params)}")
+            self.logger.info("Connect: Storing connection parameters (no network calls)")
             
             if not params:
                 raise PluginException(
@@ -27,18 +27,15 @@ class Connection(insightconnect_plugin_runtime.Connection):
                     assistance="Connection parameters are required"
                 )
             
-            # Store connection parameters
-            self.logger.info("Connect: Extracting connection parameters")
+            # Store connection parameters - no validation, no network calls
             self.client_id = params.get(Input.CLIENT_ID)
             
             # Handle credential_secret_key type for client_secret
             client_secret_obj = params.get(Input.CLIENT_SECRET)
-            self.logger.info(f"Connect: Client secret type: {type(client_secret_obj)}")
             
             if isinstance(client_secret_obj, dict):
                 self.client_secret = client_secret_obj.get("secretKey")
             elif isinstance(client_secret_obj, str):
-                # Handle case where it might be passed as a plain string
                 self.client_secret = client_secret_obj
             else:
                 self.client_secret = None
@@ -48,8 +45,6 @@ class Connection(insightconnect_plugin_runtime.Connection):
             self.tenant = params.get(Input.TENANT)
             self.ssl_verify = params.get(Input.SSL_VERIFY, True)
             
-            self.logger.info(f"Connect: Parameters extracted - tenant: {self.tenant}, ssl_verify: {self.ssl_verify}")
-            
             # Store default values for ticket creation
             self.default_ticket_type_id = params.get(Input.DEFAULT_TICKET_TYPE_ID)
             self.default_priority_id = params.get(Input.DEFAULT_PRIORITY_ID)
@@ -57,38 +52,48 @@ class Connection(insightconnect_plugin_runtime.Connection):
             self.default_agent_id = params.get(Input.DEFAULT_AGENT_ID)
             self.default_category_id = params.get(Input.DEFAULT_CATEGORY_ID)
             
-            # Validate required parameters
-            if not all([self.client_id, self.client_secret, self.auth_server, self.resource_server, self.tenant]):
-                raise PluginException(
-                    cause="Missing required connection parameters",
-                    assistance="Please provide all required connection parameters"
-                )
-            
-            # Initialize API client helper
-            from icon_haloitsm.util.api import HaloITSMAPI
-            self.client = HaloITSMAPI(
-                client_id=self.client_id,
-                client_secret=self.client_secret,
-                auth_server=self.auth_server,
-                resource_server=self.resource_server,
-                tenant=self.tenant,
-                ssl_verify=self.ssl_verify,
-                logger=self.logger
-            )
-            
-            self.logger.info("Connect: Connection established successfully")
+            # Do NOT initialize client here - it will be initialized lazily on first use
+            self.logger.info("Connect: Parameters stored successfully (lazy initialization)")
             
         except PluginException:
-            # Re-raise PluginExceptions as-is
             raise
         except Exception as e:
-            # Catch any unexpected errors during connection
-            self.logger.error(f"Unexpected error during connection: {str(e)}")
+            self.logger.error(f"Unexpected error storing parameters: {str(e)}")
             raise PluginException(
-                cause="Connection initialization failed",
+                cause="Failed to store connection parameters",
                 assistance=f"An unexpected error occurred: {str(e)}",
                 data=str(e)
             )
+    
+    def _ensure_client(self) -> None:
+        """
+        Lazy initialization of API client - called by actions on first use
+        """
+        if self.client is not None:
+            return
+        
+        self.logger.info("Initializing API client (lazy initialization)")
+        
+        # Validate required parameters
+        if not all([self.client_id, self.client_secret, self.auth_server, self.resource_server, self.tenant]):
+            raise PluginException(
+                cause="Missing required connection parameters",
+                assistance="Please provide all required connection parameters"
+            )
+        
+        # Initialize API client helper
+        from icon_haloitsm.util.api import HaloITSMAPI
+        self.client = HaloITSMAPI(
+            client_id=self.client_id,
+            client_secret=self.client_secret,
+            auth_server=self.auth_server,
+            resource_server=self.resource_server,
+            tenant=self.tenant,
+            ssl_verify=self.ssl_verify,
+            logger=self.logger
+        )
+        
+        self.logger.info("API client initialized successfully")
 
     def test(self) -> Dict[str, bool]:
         """

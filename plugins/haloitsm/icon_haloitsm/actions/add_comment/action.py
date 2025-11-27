@@ -15,6 +15,9 @@ class AddComment(insightconnect_plugin_runtime.Action):
 
     def run(self, params={}):
         """Add a comment/note to a HaloITSM ticket"""
+        # Ensure API client is initialized (lazy initialization)
+        self.connection._ensure_client()
+        
         # Extract parameters
         ticket_id = params.get(Input.TICKET_ID)
         note_html = params.get(Input.NOTE_HTML, "")

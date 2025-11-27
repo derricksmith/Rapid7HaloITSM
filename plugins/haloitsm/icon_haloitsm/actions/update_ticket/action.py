@@ -16,6 +16,9 @@ class UpdateTicket(insightconnect_plugin_runtime.Action):
         """
         Update an existing ticket in HaloITSM
         """
+        # Ensure API client is initialized (lazy initialization)
+        self.connection._ensure_client()
+        
         ticket_id = params.get(Input.TICKET_ID)
         self.logger.info(f"UpdateTicket: Updating ticket {ticket_id}")
         

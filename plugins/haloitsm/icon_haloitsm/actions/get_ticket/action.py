@@ -15,6 +15,9 @@ class GetTicket(insightconnect_plugin_runtime.Action):
 
     def run(self, params={}):
         """Get a specific ticket by ID"""
+        # Ensure API client is initialized (lazy initialization)
+        self.connection._ensure_client()
+        
         self.logger.info("GetTicket: Starting action")
         ticket_id = params.get(Input.TICKET_ID)
         

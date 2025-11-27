@@ -15,6 +15,9 @@ class SearchTickets(insightconnect_plugin_runtime.Action):
 
     def run(self, params={}):
         """Search for tickets in HaloITSM"""
+        # Ensure API client is initialized (lazy initialization)
+        self.connection._ensure_client()
+        
         search = params.get(Input.SEARCH, "")
         count = params.get(Input.COUNT, 50)
         page_no = params.get(Input.PAGE_NO, 1)
