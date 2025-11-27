@@ -70,15 +70,15 @@ class HaloITSMAPI:
         try:
             if self.logger:
                 self.logger.info(f"Requesting OAuth token from: {token_url}")
-                self.logger.info(f"SSL Verify: {self.ssl_verify}, Timeout: 30s")
+                self.logger.info(f"SSL Verify: {self.ssl_verify}, Timeout: 5s connect, 10s read")
             
-            # Use connect and read timeouts separately for better control
+            # Use very aggressive timeouts - connection test should be fast
             response = requests.post(
                 token_url,
                 data=payload,
                 headers=headers,
                 verify=self.ssl_verify,
-                timeout=(10, 30)  # (connect timeout, read timeout)
+                timeout=(5, 10)  # (connect timeout, read timeout) - fast for connection test
             )
             
             if self.logger:
@@ -98,10 +98,10 @@ class HaloITSMAPI:
             
         except requests.exceptions.Timeout as e:
             if self.logger:
-                self.logger.error(f"OAuth token request timed out after 40 seconds total")
+                self.logger.error(f"OAuth token request timed out after 15 seconds total (5s connect + 10s read)")
             raise PluginException(
                 cause="OAuth token request timed out",
-                assistance=f"The authorization server did not respond within 40 seconds. Check network connectivity and server URL: {token_url}"
+                assistance=f"The authorization server did not respond within 15 seconds. Check network connectivity and server URL: {token_url}"
             )
         except requests.exceptions.RequestException as e:
             if self.logger:

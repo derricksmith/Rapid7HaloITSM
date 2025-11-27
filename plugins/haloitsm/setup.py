@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 
 setup(name="haloitsm-derricksmith-plugin",
-      version="2.0.9",
+      version="2.0.10",
       description="Manage tickets and automate workflows with HaloITSM service desk",
       author="derricksmith",
       author_email="",

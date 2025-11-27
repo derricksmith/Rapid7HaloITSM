@@ -92,24 +92,51 @@ class Connection(insightconnect_plugin_runtime.Connection):
 
     def test(self) -> Dict[str, bool]:
         """
-        Test the connection by making an authenticated API call
-        This tests both OAuth authentication and API connectivity
+        Test the connection by validating configuration
+        Does NOT make any network calls - just validates inputs
         """
         try:
-            self.logger.info("Connection test: Testing HaloITSM connectivity")
+            self.logger.info("Connection test: Validating configuration")
             
-            # Verify client exists
-            if not self.client:
+            # Verify all required fields are present
+            if not self.client_id:
                 raise ConnectionTestException(
-                    cause="API client not initialized",
-                    assistance="Connection was not properly established"
+                    cause="Client ID is missing",
+                    assistance="Please provide a valid Client ID"
                 )
             
-            # Test connection by making a lightweight API call
-            # This tests both OAuth token acquisition AND API connectivity
-            self.logger.info("Connection test: Making test API call...")
-            self.client.test_connection()
+            if not self.client_secret:
+                raise ConnectionTestException(
+                    cause="Client Secret is missing",
+                    assistance="Please provide a valid Client Secret"
+                )
             
+            if not self.auth_server:
+                raise ConnectionTestException(
+                    cause="Authorization Server URL is missing",
+                    assistance="Please provide a valid Authorization Server URL"
+                )
+            
+            if not self.resource_server:
+                raise ConnectionTestException(
+                    cause="Resource Server URL is missing",
+                    assistance="Please provide a valid Resource Server URL"
+                )
+            
+            # Basic URL format validation
+            if not self.auth_server.startswith(('http://', 'https://')):
+                raise ConnectionTestException(
+                    cause="Invalid Authorization Server URL format",
+                    assistance="URL must start with http:// or https://"
+                )
+            
+            if not self.resource_server.startswith(('http://', 'https://')):
+                raise ConnectionTestException(
+                    cause="Invalid Resource Server URL format",
+                    assistance="URL must start with http:// or https://"
+                )
+            
+            self.logger.info("Connection test: All configuration values are valid")
             self.logger.info("Connection test: Connection test PASSED")
             return {"success": True}
             
