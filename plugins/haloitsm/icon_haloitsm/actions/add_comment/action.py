@@ -15,99 +15,53 @@ class AddComment(insightconnect_plugin_runtime.Action):
 
     def run(self, params={}):
         """Add a comment/note to a HaloITSM ticket"""
-        try:
-            if self.logger:
-                self.logger.info("AddComment: Starting action")
-                self.logger.info(f"AddComment: Received params: {list(params.keys()) if params else 'None'}")
-            
-            ticket_id = params.get(Input.TICKET_ID)
-            note_html = params.get(Input.NOTE_HTML)
-            outcome = params.get(Input.OUTCOME, "")
-            who_can_view_id = params.get(Input.WHO_CAN_VIEW_ID, 1)  # Default to public
-            note_type_id = params.get(Input.NOTE_TYPE_ID, 1)  # Default to standard note
-            
-            if not ticket_id:
-                raise insightconnect_plugin_runtime.PluginException(
-                    cause="Missing ticket ID",
-                    assistance="Please provide a valid ticket ID"
-                )
-                
-            if not note_html:
-                raise insightconnect_plugin_runtime.PluginException(
-                    cause="Missing note content",
-                    assistance="Please provide note content in note_html parameter"
-                )
-        except Exception as e:
-            if self.logger:
-                self.logger.error(f"AddComment: Error during parameter validation: {str(e)}")
-            raise
+        # Extract and validate parameters
+        ticket_id = params.get(Input.TICKET_ID)
+        note_html = params.get(Input.NOTE_HTML)
+        outcome = params.get(Input.OUTCOME, "")
+        who_can_view_id = params.get(Input.WHO_CAN_VIEW_ID, 1)  # Default to public
+        note_type_id = params.get(Input.NOTE_TYPE_ID, 1)  # Default to standard note
         
-        try:
-            if self.logger:
-                self.logger.info(f"AddComment: Adding comment to ticket {ticket_id}")
-            
-            # Prepare the note data
-            note_data = {
-                "ticket_id": ticket_id,
-                "note_html": note_html,
-                "outcome": outcome,
-                "who_can_view_id": who_can_view_id,
-                "note_type_id": note_type_id
-            }
-            
-            # Add the comment via API
-            if self.logger:
-                self.logger.info("AddComment: Calling API add_comment")
-            
-            try:
-                result = self.connection.client.add_comment(note_data)
-            except insightconnect_plugin_runtime.PluginException as api_error:
-                # Re-raise PluginExceptions as-is (already properly formatted)
-                if self.logger:
-                    self.logger.error(f"AddComment: PluginException from API: {str(api_error)}")
-                raise
-            except Exception as api_error:
-                if self.logger:
-                    self.logger.error(f"AddComment: Unexpected API error: {type(api_error).__name__}: {str(api_error)}")
-                raise insightconnect_plugin_runtime.PluginException(
-                    cause=f"Failed to add comment to ticket {ticket_id}",
-                    assistance=f"{type(api_error).__name__}: {str(api_error)[:200]}"
-                )
-            
-            if not result:
-                raise insightconnect_plugin_runtime.PluginException(
-                    cause=f"Failed to add comment to ticket {ticket_id}",
-                    assistance="The comment creation operation returned no result"
-                )
-            
-            if self.logger:
-                self.logger.info(f"AddComment: Comment added, fetching updated ticket {ticket_id}")
-            
-            # Get the updated ticket to return current state
-            try:
-                updated_ticket = self.connection.client.get_ticket(ticket_id)
-                normalized_ticket = self.connection.client._normalize_ticket(updated_ticket)
-            except Exception as get_error:
-                if self.logger:
-                    self.logger.warning(f"AddComment: Could not fetch updated ticket: {str(get_error)}")
-                # Return success even if we can't fetch the updated ticket
-                normalized_ticket = {"id": ticket_id, "summary": "Comment added successfully"}
-            
-            if self.logger:
-                self.logger.info(f"AddComment: Successfully completed for ticket {ticket_id}")
-            
-            return {
-                Output.TICKET: normalized_ticket,
-                Output.SUCCESS: True
-            }
-            
-        except insightconnect_plugin_runtime.PluginException:
-            # Re-raise PluginExceptions without modification
-            raise
-        except Exception as e:
-            if self.logger:
-                self.logger.error(f"AddComment: Unexpected error: {type(e).__name__}: {str(e)}")
+        # Validate required parameters
+        if not ticket_id or ticket_id == 0:
             raise insightconnect_plugin_runtime.PluginException(
-                cause=f"Failed to add comment",
-                assistance=f"{type(e).__name__}: {str(e)[:200]}"
+                cause="Missing or invalid ticket ID",
+                assistance="Please provide a valid ticket ID (must be greater than 0)"
             )
+            
+        if not note_html or note_html.strip() == "":
+            raise insightconnect_plugin_runtime.PluginException(
+                cause="Missing note content",
+                assistance="Please provide note content in note_html parameter"
+            )
+        
+        # Prepare the note data
+        note_data = {
+            "ticket_id": ticket_id,
+            "note_html": note_html,
+            "outcome": outcome,
+            "who_can_view_id": who_can_view_id,
+            "note_type_id": note_type_id
+        }
+        
+        # Add the comment via API - let PluginExceptions propagate naturally
+        result = self.connection.client.add_comment(note_data)
+        
+        if not result:
+            raise insightconnect_plugin_runtime.PluginException(
+                cause=f"Failed to add comment to ticket {ticket_id}",
+                assistance="The comment creation operation returned no result"
+            )
+        
+        # Try to get the updated ticket, but don't fail if we can't
+        try:
+            updated_ticket = self.connection.client.get_ticket(ticket_id)
+            normalized_ticket = self.connection.client._normalize_ticket(updated_ticket)
+        except Exception:
+            # Return success even if we can't fetch the updated ticket
+            normalized_ticket = {"id": ticket_id, "summary": "Comment added successfully"}
+        
+        return {
+            Output.TICKET: normalized_ticket,
+            Output.SUCCESS: True
+        }
