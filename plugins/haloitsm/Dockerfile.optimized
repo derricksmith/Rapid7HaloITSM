@@ -42,4 +42,4 @@ RUN rm -rf /root/.cache /tmp/* /var/tmp/* /var/lib/apt/lists/* \
 # User to run plugin code
 USER nobody
 
-ENTRYPOINT ["/usr/local/bin/komand_haloitsm"]
+ENTRYPOINT ["/usr/local/bin/icon_haloitsm"]

@@ -21,8 +21,8 @@ import logging
 # Add plugin to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from komand_haloitsm.connection.connection import Connection
-from komand_haloitsm.connection.schema import Input
+from icon_haloitsm.connection.connection import Connection
+from icon_haloitsm.connection.schema import Input
 
 # Set up logging
 logging.basicConfig(

@@ -5,8 +5,8 @@ import os
 
 sys.path.append(os.path.abspath('../'))
 
-from komand_haloitsm.actions.create_ticket.action import CreateTicket
-from komand_haloitsm.actions.create_ticket.schema import Input, Output
+from icon_haloitsm.actions.create_ticket.action import CreateTicket
+from icon_haloitsm.actions.create_ticket.schema import Input, Output
 
 
 class TestCreateTicketWithDefaults(unittest.TestCase):
@@ -24,7 +24,7 @@ class TestCreateTicketWithDefaults(unittest.TestCase):
         
         cls.action.logger = Mock()
 
-    @patch('komand_haloitsm.util.api.HaloITSMAPI.create_ticket')
+    @patch('icon_haloitsm.util.api.HaloITSMAPI.create_ticket')
     def test_create_ticket_with_connection_defaults(self, mock_create):
         """Test ticket creation using connection defaults"""
         # Mock API response
@@ -72,7 +72,7 @@ class TestCreateTicketWithDefaults(unittest.TestCase):
         self.assertTrue(result[Output.SUCCESS])
         self.assertEqual(result[Output.TICKET]["id"], 12345)
     
-    @patch('komand_haloitsm.util.api.HaloITSMAPI.create_ticket')
+    @patch('icon_haloitsm.util.api.HaloITSMAPI.create_ticket')
     def test_create_ticket_override_defaults(self, mock_create):
         """Test ticket creation with overridden defaults"""
         # Mock API response

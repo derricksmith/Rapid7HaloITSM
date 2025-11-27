@@ -4,8 +4,8 @@ sys.path.append(os.path.abspath('../'))
 
 import unittest
 from unittest.mock import Mock, patch
-from komand_haloitsm.actions.add_comment.action import AddComment
-from komand_haloitsm.actions.add_comment.schema import Input, Output
+from icon_haloitsm.actions.add_comment.action import AddComment
+from icon_haloitsm.actions.add_comment.schema import Input, Output
 from insightconnect_plugin_runtime.exceptions import PluginException
 
 

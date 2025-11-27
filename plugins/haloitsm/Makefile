@@ -7,7 +7,7 @@ NORMAL := "\033[0m"
 # Plugin metadata (must match plugin.spec.yaml)
 VENDOR := derricksmith
 NAME := haloitsm
-VERSION := 1.0.6
+VERSION := 2.0.0
 
 .PHONY: default image export test validate clean install lint
 
@@ -54,4 +54,4 @@ install:
 # Run linting
 lint:
 	$(info [$(YELLOW)*$(NORMAL)] Running linter)
-	flake8 komand_haloitsm/
+	flake8 icon_haloitsm/

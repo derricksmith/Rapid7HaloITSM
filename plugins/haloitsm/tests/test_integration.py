@@ -4,14 +4,14 @@ sys.path.append(os.path.abspath('../'))
 
 import os
 import json
-from komand_haloitsm.connection.connection import Connection
-from komand_haloitsm.actions.create_ticket.action import CreateTicket
-from komand_haloitsm.actions.update_ticket.action import UpdateTicket
-from komand_haloitsm.actions.get_ticket.action import GetTicket
-from komand_haloitsm.actions.add_comment.action import AddComment
-from komand_haloitsm.actions.assign_ticket.action import AssignTicket
-from komand_haloitsm.actions.close_ticket.action import CloseTicket
-from komand_haloitsm.actions.search_tickets.action import SearchTickets
+from icon_haloitsm.connection.connection import Connection
+from icon_haloitsm.actions.create_ticket.action import CreateTicket
+from icon_haloitsm.actions.update_ticket.action import UpdateTicket
+from icon_haloitsm.actions.get_ticket.action import GetTicket
+from icon_haloitsm.actions.add_comment.action import AddComment
+from icon_haloitsm.actions.assign_ticket.action import AssignTicket
+from icon_haloitsm.actions.close_ticket.action import CloseTicket
+from icon_haloitsm.actions.search_tickets.action import SearchTickets
 
 
 class TestHaloITSMIntegration:

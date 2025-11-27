@@ -1,1 +1,0 @@
-# Connection package for HaloITSM OAuth2 authentication

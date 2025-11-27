@@ -3,8 +3,8 @@ import os
 sys.path.append(os.path.abspath('../'))
 
 from unittest import TestCase
-from komand_haloitsm.actions.create_ticket import CreateTicket
-from komand_haloitsm.actions.create_ticket.schema import Input, Output
+from icon_haloitsm.actions.create_ticket import CreateTicket
+from icon_haloitsm.actions.create_ticket.schema import Input, Output
 from unittest.mock import Mock, patch
 import json
 
@@ -16,7 +16,7 @@ class TestCreateTicket(TestCase):
         cls.action.connection = Mock()
         cls.action.logger = Mock()
     
-    @patch('komand_haloitsm.util.api.HaloITSMAPI.create_ticket')
+    @patch('icon_haloitsm.util.api.HaloITSMAPI.create_ticket')
     def test_create_ticket_success(self, mock_create):
         # Mock API response
         mock_create.return_value = {

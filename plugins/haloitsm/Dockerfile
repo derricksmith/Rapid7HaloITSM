@@ -20,4 +20,4 @@ RUN rm -rf /root/.cache /tmp/* /var/tmp/* /python/src/build
 # User to run plugin code
 USER nobody
 
-ENTRYPOINT ["/usr/local/bin/komand_haloitsm"]
+ENTRYPOINT ["python", "/python/src/bin/icon_haloitsm"]
