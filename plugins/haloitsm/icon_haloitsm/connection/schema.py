@@ -16,7 +16,7 @@ class ConnectionSchema(insightconnect_plugin_runtime.Input):
           "order": 1
         },
         "client_secret": {
-          "type": "credential_secret_key", 
+          "$ref": "#/definitions/credential_secret_key",
           "title": "Client Secret",
           "description": "OAuth2 Client Secret for API authentication",
           "order": 2
@@ -84,7 +84,24 @@ class ConnectionSchema(insightconnect_plugin_runtime.Input):
         "resource_server",
         "tenant"
       ],
-      "definitions": {}
+      "definitions": {
+        "credential_secret_key": {
+          "id": "credential_secret_key",
+          "type": "object",
+          "title": "Credential: Secret Key",
+          "description": "A shared secret key",
+          "required": ["secretKey"],
+          "properties": {
+            "secretKey": {
+              "type": "string",
+              "title": "Secret Key",
+              "description": "The shared secret key",
+              "format": "password",
+              "displayType": "password"
+            }
+          }
+        }
+      }
     }
     """)
 
