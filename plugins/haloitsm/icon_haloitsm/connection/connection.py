@@ -97,9 +97,36 @@ class Connection(insightconnect_plugin_runtime.Connection):
 
     def test(self) -> Dict[str, bool]:
         """
-        Test the connection - ALWAYS returns success immediately
-        InsightConnect tests connection BEFORE testing actions
-        All validation happens during action execution
+        Test the connection by making an actual API call
+        This validates OAuth credentials AND API connectivity
         """
-        # Return immediately - no validation, no network calls, nothing
-        return {"success": True}
+        try:
+            self.logger.info("Connection test: Starting")
+            
+            # Ensure API client is initialized
+            self._ensure_client()
+            
+            # Make a lightweight API call to verify credentials work
+            # Get minimal ticket data (1 ticket, paginated)
+            self.logger.info("Connection test: Making test API call to /api/tickets")
+            test_result = self.client.test_connection()
+            
+            self.logger.info("Connection test: API call successful")
+            return {"success": True}
+            
+        except ConnectionTestException:
+            raise
+        except PluginException as e:
+            self.logger.error(f"Connection test failed: {str(e)}")
+            raise ConnectionTestException(
+                cause=e.cause if hasattr(e, 'cause') else "Connection test failed",
+                assistance=e.assistance if hasattr(e, 'assistance') else str(e),
+                data=e.data if hasattr(e, 'data') else str(e)
+            )
+        except Exception as e:
+            self.logger.error(f"Connection test failed: {type(e).__name__}: {str(e)}")
+            raise ConnectionTestException(
+                cause="Connection test failed",
+                assistance=f"Unable to connect to HaloITSM API: {str(e)}",
+                data=f"{type(e).__name__}: {str(e)}"
+            )

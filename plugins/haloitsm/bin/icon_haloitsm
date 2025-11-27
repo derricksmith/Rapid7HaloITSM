@@ -6,7 +6,7 @@ from sys import argv
 
 Name = "HaloITSM"
 Vendor = "derricksmith"
-Version = "2.0.12"
+Version = "2.0.13"
 Description = "Manage tickets and automate workflows with HaloITSM service desk"
 
 
