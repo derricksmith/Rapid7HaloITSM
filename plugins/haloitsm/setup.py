@@ -2,17 +2,13 @@ from setuptools import setup, find_packages
 
 setup(
     name="komand_haloitsm",
-    version="1.0.1",
+    version="1.0.6",
     description="HaloITSM plugin for Rapid7 InsightConnect",
-    author="Rapid7",
+    author="derricksmith",
     packages=find_packages(),
     install_requires=[
         "insightconnect-plugin-runtime>=5.0.0",
         "requests>=2.25.1"
     ],
-    entry_points={
-        "console_scripts": [
-            "komand_haloitsm = komand_haloitsm.bin.komand_haloitsm:main"
-        ]
-    }
+    scripts=['bin/komand_haloitsm']
 )
