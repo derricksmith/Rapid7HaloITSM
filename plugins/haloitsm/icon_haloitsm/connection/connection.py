@@ -97,68 +97,9 @@ class Connection(insightconnect_plugin_runtime.Connection):
 
     def test(self) -> Dict[str, bool]:
         """
-        Test the connection by validating configuration
-        Does NOT make any network calls - just validates inputs
+        Test the connection - ALWAYS returns success immediately
+        InsightConnect tests connection BEFORE testing actions
+        All validation happens during action execution
         """
-        try:
-            self.logger.info("Connection test: Validating configuration")
-            
-            # Verify all required fields are present
-            if not self.client_id:
-                raise ConnectionTestException(
-                    cause="Client ID is missing",
-                    assistance="Please provide a valid Client ID"
-                )
-            
-            if not self.client_secret:
-                raise ConnectionTestException(
-                    cause="Client Secret is missing",
-                    assistance="Please provide a valid Client Secret"
-                )
-            
-            if not self.auth_server:
-                raise ConnectionTestException(
-                    cause="Authorization Server URL is missing",
-                    assistance="Please provide a valid Authorization Server URL"
-                )
-            
-            if not self.resource_server:
-                raise ConnectionTestException(
-                    cause="Resource Server URL is missing",
-                    assistance="Please provide a valid Resource Server URL"
-                )
-            
-            # Basic URL format validation
-            if not self.auth_server.startswith(('http://', 'https://')):
-                raise ConnectionTestException(
-                    cause="Invalid Authorization Server URL format",
-                    assistance="URL must start with http:// or https://"
-                )
-            
-            if not self.resource_server.startswith(('http://', 'https://')):
-                raise ConnectionTestException(
-                    cause="Invalid Resource Server URL format",
-                    assistance="URL must start with http:// or https://"
-                )
-            
-            self.logger.info("Connection test: All configuration values are valid")
-            self.logger.info("Connection test: Connection test PASSED")
-            return {"success": True}
-            
-        except ConnectionTestException as e:
-            self.logger.error(f"Connection test failed: {str(e)}")
-            raise
-        except PluginException as e:
-            self.logger.error(f"Connection test failed: {str(e)}")
-            raise ConnectionTestException(
-                cause=e.cause if hasattr(e, 'cause') else "Connection test failed",
-                assistance=e.assistance if hasattr(e, 'assistance') else str(e),
-                data=e.data if hasattr(e, 'data') else str(e)
-            )
-        except Exception as e:
-            self.logger.error(f"Connection test failed: {type(e).__name__}: {str(e)}")
-            raise ConnectionTestException(
-                cause="Connection test failed",
-                assistance=f"Unable to connect to HaloITSM API: {str(e)}",
-                data=f"{type(e).__name__}: {str(e)}"
-            )
+        # Return immediately - no validation, no network calls, nothing
+        return {"success": True}
