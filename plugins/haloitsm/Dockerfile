@@ -5,17 +5,27 @@ LABEL sdk=python
 
 WORKDIR /python/src
 
-ADD ./plugin.spec.yaml /plugin.spec.yaml
-ADD ./requirements.txt /python/src/requirements.txt
+# Copy only what's needed for dependencies first (layer caching)
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt && \
+    rm -rf /root/.cache /tmp/*
 
-RUN if [ -f requirements.txt ]; then pip install --no-cache-dir -r requirements.txt; fi
+# Copy spec file
+COPY plugin.spec.yaml /plugin.spec.yaml
 
-ADD . /python/src
+# Copy only necessary source files (no tests, builds, or cache)
+COPY bin ./bin
+COPY icon_haloitsm ./icon_haloitsm
+COPY setup.py ./
+COPY help.md CONFIGURATION.md ./
 
-RUN python setup.py build && python setup.py install
-
-# Clean up to reduce image size
-RUN rm -rf /root/.cache /tmp/* /var/tmp/* /python/src/build
+# Build and install, then clean up in same layer to reduce size
+RUN python setup.py build && \
+    python setup.py install && \
+    rm -rf /python/src/build /root/.cache /tmp/* /var/tmp/* && \
+    find /python/src -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
+    find /python/src -type f -name "*.pyc" -delete && \
+    find /python/src -type f -name "*.pyo" -delete
 
 # User to run plugin code
 USER nobody

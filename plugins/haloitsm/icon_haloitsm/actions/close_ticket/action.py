@@ -40,7 +40,17 @@ class CloseTicket(insightconnect_plugin_runtime.Action):
             
             # Update the ticket to close it
             self.logger.info(f"CloseTicket: Updating ticket {ticket_id} with status {status_id}")
-            result = self.connection.client.update_ticket(close_data)
+            try:
+                result = self.connection.client.update_ticket(close_data)
+            except insightconnect_plugin_runtime.PluginException:
+                # Re-raise PluginExceptions as-is
+                raise
+            except Exception as api_error:
+                self.logger.error(f"CloseTicket: Unexpected API error: {type(api_error).__name__}: {str(api_error)}")
+                raise insightconnect_plugin_runtime.PluginException(
+                    cause=f"Failed to close ticket {ticket_id}",
+                    assistance=f"{type(api_error).__name__}: {str(api_error)[:200]}"
+                )
             
             if not result:
                 raise insightconnect_plugin_runtime.PluginException(
@@ -69,9 +79,12 @@ class CloseTicket(insightconnect_plugin_runtime.Action):
                 Output.SUCCESS: True
             }
             
+        except insightconnect_plugin_runtime.PluginException:
+            # Re-raise PluginExceptions without modification
+            raise
         except Exception as e:
-            self.logger.error(f"Failed to close ticket {ticket_id}: {str(e)}")
+            self.logger.error(f"CloseTicket: Unexpected error: {type(e).__name__}: {str(e)}")
             raise insightconnect_plugin_runtime.PluginException(
-                cause=f"Failed to close ticket {ticket_id}",
-                assistance=str(e)
+                cause=f"Failed to close ticket",
+                assistance=f"{type(e).__name__}: {str(e)[:200]}"
             )

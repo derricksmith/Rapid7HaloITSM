@@ -58,7 +58,21 @@ class AddComment(insightconnect_plugin_runtime.Action):
             # Add the comment via API
             if self.logger:
                 self.logger.info("AddComment: Calling API add_comment")
-            result = self.connection.client.add_comment(note_data)
+            
+            try:
+                result = self.connection.client.add_comment(note_data)
+            except insightconnect_plugin_runtime.PluginException as api_error:
+                # Re-raise PluginExceptions as-is (already properly formatted)
+                if self.logger:
+                    self.logger.error(f"AddComment: PluginException from API: {str(api_error)}")
+                raise
+            except Exception as api_error:
+                if self.logger:
+                    self.logger.error(f"AddComment: Unexpected API error: {type(api_error).__name__}: {str(api_error)}")
+                raise insightconnect_plugin_runtime.PluginException(
+                    cause=f"Failed to add comment to ticket {ticket_id}",
+                    assistance=f"{type(api_error).__name__}: {str(api_error)[:200]}"
+                )
             
             if not result:
                 raise insightconnect_plugin_runtime.PluginException(
@@ -87,15 +101,13 @@ class AddComment(insightconnect_plugin_runtime.Action):
                 Output.SUCCESS: True
             }
             
-        except insightconnect_plugin_runtime.PluginException as e:
-            if self.logger:
-                self.logger.error(f"AddComment: PluginException: {str(e)}")
+        except insightconnect_plugin_runtime.PluginException:
+            # Re-raise PluginExceptions without modification
             raise
         except Exception as e:
             if self.logger:
-                self.logger.error(f"AddComment: Unexpected error: {str(e)}")
+                self.logger.error(f"AddComment: Unexpected error: {type(e).__name__}: {str(e)}")
             raise insightconnect_plugin_runtime.PluginException(
-                cause=f"Failed to add comment to ticket {ticket_id}",
-                assistance=str(e),
-                data=str(e)
+                cause=f"Failed to add comment",
+                assistance=f"{type(e).__name__}: {str(e)[:200]}"
             )

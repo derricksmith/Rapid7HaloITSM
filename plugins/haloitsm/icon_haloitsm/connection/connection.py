@@ -18,7 +18,8 @@ class Connection(insightconnect_plugin_runtime.Connection):
         Establish connection to HaloITSM API using OAuth2
         """
         try:
-            self.logger.info("Connect: Connecting to HaloITSM API")
+            self.logger.info("Connect: Starting connection initialization")
+            self.logger.info(f"Connect: Received params type: {type(params)}")
             
             if not params:
                 raise PluginException(
@@ -27,9 +28,13 @@ class Connection(insightconnect_plugin_runtime.Connection):
                 )
             
             # Store connection parameters
+            self.logger.info("Connect: Extracting connection parameters")
             self.client_id = params.get(Input.CLIENT_ID)
+            
             # Handle credential_secret_key type for client_secret
             client_secret_obj = params.get(Input.CLIENT_SECRET)
+            self.logger.info(f"Connect: Client secret type: {type(client_secret_obj)}")
+            
             if isinstance(client_secret_obj, dict):
                 self.client_secret = client_secret_obj.get("secretKey")
             elif isinstance(client_secret_obj, str):
@@ -42,6 +47,8 @@ class Connection(insightconnect_plugin_runtime.Connection):
             self.resource_server = params.get(Input.RESOURCE_SERVER)
             self.tenant = params.get(Input.TENANT)
             self.ssl_verify = params.get(Input.SSL_VERIFY, True)
+            
+            self.logger.info(f"Connect: Parameters extracted - tenant: {self.tenant}, ssl_verify: {self.ssl_verify}")
             
             # Store default values for ticket creation
             self.default_ticket_type_id = params.get(Input.DEFAULT_TICKET_TYPE_ID)
@@ -95,10 +102,24 @@ class Connection(insightconnect_plugin_runtime.Connection):
             self.logger.info(f"Connection test: SSL Verify: {self.ssl_verify}")
             self.logger.info(f"Connection test: Client ID: {self.client_id[:10]}..." if self.client_id else "None")
             
+            # Verify client exists
+            if not self.client:
+                raise ConnectionTestException(
+                    cause="API client not initialized",
+                    assistance="Connection was not properly established"
+                )
+            
             # Attempt to get OAuth2 token (this is the main test)
             # If this succeeds, the connection is valid
             self.logger.info("Connection test: Requesting OAuth2 token...")
-            token = self.client.get_access_token()
+            try:
+                token = self.client.get_access_token()
+            except Exception as token_error:
+                self.logger.error(f"Connection test: Token request failed: {type(token_error).__name__}: {str(token_error)}")
+                raise ConnectionTestException(
+                    cause="Failed to obtain OAuth2 token",
+                    assistance=f"Authentication failed: {str(token_error)}"
+                )
             
             if not token:
                 raise ConnectionTestException(
@@ -108,24 +129,9 @@ class Connection(insightconnect_plugin_runtime.Connection):
             
             self.logger.info(f"Connection test: Token obtained successfully (length: {len(token) if token else 0})")
             
-            # Test API access with a simple request
-            # Use a very simple endpoint that should always work
-            self.logger.info("Connection test: Testing API access with GET /tickettypes?pageinate=false&count=1")
-            try:
-                response = self.client.make_request(
-                    method="GET",
-                    endpoint="/tickettypes",
-                    params={"pageinate": "false", "count": "1"},
-                    timeout=15,
-                    retry_count=1
-                )
-                self.logger.info(f"Connection test: API call successful, response type: {type(response).__name__}")
-            except Exception as api_error:
-                # If the API call fails but we got a token, that's still a valid connection
-                # The API endpoint might not exist or might require different parameters
-                self.logger.warning(f"API test call failed but token was obtained: {str(api_error)}")
-                self.logger.info("Connection test: Treating as PASS since authentication succeeded")
-            
+            # Skip the API test call entirely - just verify authentication
+            # This avoids any issues with API endpoints during connection test
+            self.logger.info("Connection test: Skipping API endpoint test - token authentication sufficient")
             self.logger.info("Connection test: Connection test PASSED")
             
             return {"success": True}

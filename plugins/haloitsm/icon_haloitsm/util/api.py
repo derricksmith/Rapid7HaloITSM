@@ -158,10 +158,12 @@ class HaloITSMAPI:
                 if attempt == retry_count - 1:
                     status = e.response.status_code if e.response else "unknown"
                     text = e.response.text if e.response else str(e)
+                    # Ensure data is a simple string to avoid serialization issues
+                    error_data = f"Status: {status}, Response: {text[:500] if text else 'None'}"
                     raise PluginException(
                         cause=f"HTTP {status} error",
-                        assistance=f"HaloITSM API returned an error: {text}",
-                        data=str(e)
+                        assistance=f"HaloITSM API returned an error: {text[:200] if text else 'Unknown error'}",
+                        data=error_data
                     )
             except requests.exceptions.Timeout as e:
                 if self.logger:
@@ -179,6 +181,16 @@ class HaloITSMAPI:
                     raise PluginException(
                         cause="Request failed",
                         assistance=f"Unable to connect to HaloITSM API: {str(e)}",
+                        data=str(e)
+                    )
+            except Exception as e:
+                # Catch ANY other exception that might occur
+                if self.logger:
+                    self.logger.error(f"Unexpected error on attempt {attempt + 1}/{retry_count}: {type(e).__name__}: {str(e)}")
+                if attempt == retry_count - 1:
+                    raise PluginException(
+                        cause=f"Unexpected error: {type(e).__name__}",
+                        assistance=f"An unexpected error occurred: {str(e)}",
                         data=str(e)
                     )
             

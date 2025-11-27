@@ -39,15 +39,19 @@ dist/
 !help.md
 !CONFIGURATION.md
 
-# Old build files
+# Old build files and exports
 *.plg
 *.tar
 *.tar.gz
+derricksmith_haloitsm_*.tar*
 
 # Test files
 smoke_test.py
 pytest.ini
+test_*.py
+test_*.sh
 
 # Build scripts
 build_plugin.py
 Makefile
+Dockerfile.optimized

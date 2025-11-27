@@ -71,10 +71,10 @@ class CreateTicket(insightconnect_plugin_runtime.Action):
             # Re-raise PluginExceptions without modification
             raise
         except Exception as e:
-            self.logger.error(f"CreateTicket: Failed to create ticket: {str(e)}")
+            self.logger.error(f"CreateTicket: Unexpected error: {type(e).__name__}: {str(e)}")
             raise PluginException(
                 cause="Failed to create ticket",
-                assistance=str(e)
+                assistance=f"{type(e).__name__}: {str(e)[:200]}"
             )
     
     def _normalize_ticket(self, ticket_data):

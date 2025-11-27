@@ -59,9 +59,12 @@ class UpdateTicket(insightconnect_plugin_runtime.Action):
                 Output.SUCCESS: True
             }
             
+        except PluginException:
+            # Re-raise PluginExceptions without modification
+            raise
         except Exception as e:
-            self.logger.error(f"UpdateTicket: Failed to update ticket: {str(e)}")
+            self.logger.error(f"UpdateTicket: Unexpected error: {type(e).__name__}: {str(e)}")
             raise PluginException(
-                cause=f"Failed to update ticket {ticket_id}",
-                assistance=str(e)
+                cause="Failed to update ticket",
+                assistance=f"{type(e).__name__}: {str(e)[:200]}"
             )

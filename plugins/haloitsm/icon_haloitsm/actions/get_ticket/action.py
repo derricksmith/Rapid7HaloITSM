@@ -57,8 +57,8 @@ class GetTicket(insightconnect_plugin_runtime.Action):
             # Re-raise PluginExceptions as-is (these are already properly formatted)
             raise
         except Exception as e:
-            self.logger.error(f"GetTicket: Failed to get ticket {ticket_id}: {str(e)}")
+            self.logger.error(f"GetTicket: Unexpected error: {type(e).__name__}: {str(e)}")
             raise insightconnect_plugin_runtime.PluginException(
-                cause=f"Failed to retrieve ticket {ticket_id}",
-                assistance=str(e)
+                cause=f"Failed to retrieve ticket",
+                assistance=f"{type(e).__name__}: {str(e)[:200]}"
             )

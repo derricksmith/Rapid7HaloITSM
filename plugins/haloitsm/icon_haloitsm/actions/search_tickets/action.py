@@ -46,9 +46,12 @@ class SearchTickets(insightconnect_plugin_runtime.Action):
                 Output.COUNT: len(normalized_tickets)
             }
             
+        except insightconnect_plugin_runtime.PluginException:
+            # Re-raise PluginExceptions without modification
+            raise
         except Exception as e:
-            self.logger.error(f"Failed to search tickets: {str(e)}")
+            self.logger.error(f"SearchTickets: Unexpected error: {type(e).__name__}: {str(e)}")
             raise insightconnect_plugin_runtime.PluginException(
                 cause="Failed to search tickets",
-                assistance=str(e)
+                assistance=f"{type(e).__name__}: {str(e)[:200]}"
             )
