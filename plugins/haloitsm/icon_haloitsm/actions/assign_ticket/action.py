@@ -46,6 +46,7 @@ class AssignTicket(insightconnect_plugin_runtime.Action):
                 assignment_data["team_id"] = team_id
             
             # Update the ticket with new assignment
+            self.logger.info(f"AssignTicket: Updating ticket {ticket_id} with assignment data")
             result = self.connection.client.update_ticket(assignment_data)
             
             if not result:
@@ -55,8 +56,22 @@ class AssignTicket(insightconnect_plugin_runtime.Action):
                 )
             
             # Get the updated ticket to return current state
-            updated_ticket = self.connection.client.get_ticket(ticket_id)
-            normalized_ticket = self.connection.client._normalize_ticket(updated_ticket)
+            self.logger.info(f"AssignTicket: Fetching updated ticket {ticket_id}")
+            try:
+                updated_ticket = self.connection.client.get_ticket(ticket_id)
+                normalized_ticket = self.connection.client._normalize_ticket(updated_ticket)
+            except Exception as get_error:
+                self.logger.warning(f"AssignTicket: Could not fetch updated ticket: {str(get_error)}")
+                # Return minimal ticket data - assignment was successful even if we can't fetch updated state
+                assignment_info = []
+                if agent_id:
+                    assignment_info.append(f"agent {agent_id}")
+                if team_id:
+                    assignment_info.append(f"team {team_id}")
+                normalized_ticket = {
+                    "id": ticket_id,
+                    "summary": f"Ticket assigned to {', '.join(assignment_info)}"
+                }
             
             assignment_info = []
             if agent_id:
@@ -64,7 +79,7 @@ class AssignTicket(insightconnect_plugin_runtime.Action):
             if team_id:
                 assignment_info.append(f"team {team_id}")
             
-            self.logger.info(f"Successfully assigned ticket {ticket_id} to {', '.join(assignment_info)}")
+            self.logger.info(f"AssignTicket: Successfully assigned ticket {ticket_id} to {', '.join(assignment_info)}")
             
             return {
                 Output.TICKET: normalized_ticket,

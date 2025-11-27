@@ -39,6 +39,7 @@ class CloseTicket(insightconnect_plugin_runtime.Action):
                 close_data["details"] = f"Ticket closed with resolution: {resolution}"
             
             # Update the ticket to close it
+            self.logger.info(f"CloseTicket: Updating ticket {ticket_id} with status {status_id}")
             result = self.connection.client.update_ticket(close_data)
             
             if not result:
@@ -48,10 +49,20 @@ class CloseTicket(insightconnect_plugin_runtime.Action):
                 )
             
             # Get the updated ticket to return current state
-            updated_ticket = self.connection.client.get_ticket(ticket_id)
-            normalized_ticket = self.connection.client._normalize_ticket(updated_ticket)
+            self.logger.info(f"CloseTicket: Fetching updated ticket {ticket_id}")
+            try:
+                updated_ticket = self.connection.client.get_ticket(ticket_id)
+                normalized_ticket = self.connection.client._normalize_ticket(updated_ticket)
+            except Exception as get_error:
+                self.logger.warning(f"CloseTicket: Could not fetch updated ticket: {str(get_error)}")
+                # Return minimal ticket data - close was successful even if we can't fetch updated state
+                normalized_ticket = {
+                    "id": ticket_id,
+                    "summary": "Ticket closed successfully",
+                    "status_id": status_id
+                }
             
-            self.logger.info(f"Successfully closed ticket {ticket_id}")
+            self.logger.info(f"CloseTicket: Successfully closed ticket {ticket_id}")
             
             return {
                 Output.TICKET: normalized_ticket,

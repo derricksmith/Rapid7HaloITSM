@@ -15,6 +15,7 @@ class GetTicket(insightconnect_plugin_runtime.Action):
 
     def run(self, params={}):
         """Get a specific ticket by ID"""
+        self.logger.info("GetTicket: Starting action")
         ticket_id = params.get(Input.TICKET_ID)
         
         if not ticket_id:
@@ -32,6 +33,7 @@ class GetTicket(insightconnect_plugin_runtime.Action):
         
         try:
             # Get ticket from HaloITSM API
+            self.logger.info(f"GetTicket: Fetching ticket {ticket_id}")
             ticket = self.connection.client.get_ticket(ticket_id)
             
             if not ticket:
@@ -41,17 +43,21 @@ class GetTicket(insightconnect_plugin_runtime.Action):
                 )
             
             # Normalize the ticket data
+            self.logger.info(f"GetTicket: Normalizing ticket data")
             normalized_ticket = self.connection.client._normalize_ticket(ticket)
             
-            self.logger.info(f"Successfully retrieved ticket {ticket_id}")
+            self.logger.info(f"GetTicket: Successfully retrieved ticket {ticket_id}")
             
             return {
                 Output.TICKET: normalized_ticket,
                 Output.SUCCESS: True
             }
             
+        except insightconnect_plugin_runtime.PluginException:
+            # Re-raise PluginExceptions as-is (these are already properly formatted)
+            raise
         except Exception as e:
-            self.logger.error(f"Failed to get ticket {ticket_id}: {str(e)}")
+            self.logger.error(f"GetTicket: Failed to get ticket {ticket_id}: {str(e)}")
             raise insightconnect_plugin_runtime.PluginException(
                 cause=f"Failed to retrieve ticket {ticket_id}",
                 assistance=str(e)

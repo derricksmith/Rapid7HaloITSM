@@ -22,14 +22,26 @@ class HaloITSMAPI:
         self.client_id = client_id
         self.client_secret = client_secret
         # Safe rstrip - check for None first
-        self.auth_server = auth_server.rstrip('/') if auth_server else None
-        self.resource_server = resource_server.rstrip('/') if resource_server else None
+        self.auth_server = auth_server.rstrip('/') if auth_server else ""
+        self.resource_server = resource_server.rstrip('/') if resource_server else ""
         self.tenant = tenant
         self.ssl_verify = ssl_verify
         self.logger = logger
         
         self.access_token = None
         self.token_expires_at = 0
+        
+        # Validate that required fields are not empty
+        if not self.auth_server:
+            raise PluginException(
+                cause="Invalid authorization server",
+                assistance="Authorization server URL cannot be empty"
+            )
+        if not self.resource_server:
+            raise PluginException(
+                cause="Invalid resource server",
+                assistance="Resource server URL cannot be empty"
+            )
     
     def get_access_token(self) -> str:
         """
