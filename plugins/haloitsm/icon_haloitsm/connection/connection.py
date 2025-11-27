@@ -29,7 +29,14 @@ class Connection(insightconnect_plugin_runtime.Connection):
         self.client_id = params.get(Input.CLIENT_ID)
         # Handle credential_secret_key type for client_secret
         client_secret_obj = params.get(Input.CLIENT_SECRET)
-        self.client_secret = client_secret_obj.get("secretKey") if client_secret_obj else None
+        if isinstance(client_secret_obj, dict):
+            self.client_secret = client_secret_obj.get("secretKey")
+        elif isinstance(client_secret_obj, str):
+            # Handle case where it might be passed as a plain string
+            self.client_secret = client_secret_obj
+        else:
+            self.client_secret = None
+        
         self.auth_server = params.get(Input.AUTHORIZATION_SERVER)
         self.resource_server = params.get(Input.RESOURCE_SERVER)
         self.tenant = params.get(Input.TENANT)
@@ -69,6 +76,10 @@ class Connection(insightconnect_plugin_runtime.Connection):
         """
         try:
             self.logger.info("Connection test: Starting authentication test")
+            self.logger.info(f"Connection test: Auth server: {self.auth_server}")
+            self.logger.info(f"Connection test: Resource server: {self.resource_server}")
+            self.logger.info(f"Connection test: Tenant: {self.tenant}")
+            self.logger.info(f"Connection test: SSL Verify: {self.ssl_verify}")
             
             # Attempt to get OAuth2 token
             token = self.client.get_access_token()
