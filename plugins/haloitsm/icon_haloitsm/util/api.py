@@ -68,13 +68,22 @@ class HaloITSMAPI:
         }
         
         try:
+            if self.logger:
+                self.logger.info(f"Requesting OAuth token from: {token_url}")
+                self.logger.info(f"SSL Verify: {self.ssl_verify}, Timeout: 30s")
+            
+            # Use connect and read timeouts separately for better control
             response = requests.post(
                 token_url,
                 data=payload,
                 headers=headers,
                 verify=self.ssl_verify,
-                timeout=30
+                timeout=(10, 30)  # (connect timeout, read timeout)
             )
+            
+            if self.logger:
+                self.logger.info(f"OAuth response received: status={response.status_code}")
+            
             response.raise_for_status()
             
             token_data = response.json()
@@ -87,11 +96,19 @@ class HaloITSMAPI:
             
             return self.access_token
             
+        except requests.exceptions.Timeout as e:
+            if self.logger:
+                self.logger.error(f"OAuth token request timed out after 40 seconds total")
+            raise PluginException(
+                cause="OAuth token request timed out",
+                assistance=f"The authorization server did not respond within 40 seconds. Check network connectivity and server URL: {token_url}"
+            )
         except requests.exceptions.RequestException as e:
+            if self.logger:
+                self.logger.error(f"OAuth token request failed: {type(e).__name__}: {str(e)}")
             raise PluginException(
                 cause="Failed to obtain OAuth2 token",
-                assistance="Check your client credentials and authorization server URL",
-                data=str(e)
+                assistance=f"Check your client credentials and authorization server URL. Error: {type(e).__name__}"
             )
     
     def make_request(
@@ -237,6 +254,16 @@ class HaloITSMAPI:
         if isinstance(response, list) and len(response) > 0:
             return response[0]
         return response
+    
+    def test_connection(self) -> bool:
+        """Test API connectivity by fetching minimal ticket data"""
+        response = self.make_request(
+            method="GET",
+            endpoint="/tickets",
+            params={"count": 1, "pageinate": True}  # Get only 1 ticket for quick test
+        )
+        # If we get here without exception, connection works
+        return True
     
     def search_tickets(self, filters: Dict[str, Any]) -> list:
         """Search for tickets with filters"""
