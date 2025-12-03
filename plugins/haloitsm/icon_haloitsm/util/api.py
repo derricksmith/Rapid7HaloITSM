@@ -99,16 +99,32 @@ class HaloITSMAPI:
         except requests.exceptions.Timeout as e:
             if self.logger:
                 self.logger.error(f"OAuth token request timed out after 15 seconds total (5s connect + 10s read)")
+                self.logger.error(f"Token URL: {token_url}")
             raise PluginException(
                 cause="OAuth token request timed out",
                 assistance=f"The authorization server did not respond within 15 seconds. Check network connectivity and server URL: {token_url}"
             )
+        except requests.exceptions.HTTPError as e:
+            # HTTP error with status code
+            status_code = e.response.status_code if hasattr(e, 'response') else 'unknown'
+            response_text = e.response.text if hasattr(e, 'response') else 'no response'
+            if self.logger:
+                self.logger.error(f"OAuth request failed with HTTP {status_code}")
+                self.logger.error(f"Token URL: {token_url}")
+                self.logger.error(f"Client ID: {self.client_id}")
+                self.logger.error(f"Response: {response_text}")
+            raise PluginException(
+                cause=f"OAuth authentication failed with HTTP {status_code}",
+                assistance=f"Check your client credentials. Server response: {response_text[:200]}"
+            )
         except requests.exceptions.RequestException as e:
             if self.logger:
                 self.logger.error(f"OAuth token request failed: {type(e).__name__}: {str(e)}")
+                self.logger.error(f"Token URL: {token_url}")
+                self.logger.error(f"Client ID: {self.client_id}")
             raise PluginException(
                 cause="Failed to obtain OAuth2 token",
-                assistance=f"Check your client credentials and authorization server URL. Error: {type(e).__name__}"
+                assistance=f"Check your client credentials and authorization server URL. Error: {type(e).__name__}: {str(e)}"
             )
     
     def make_request(
@@ -133,6 +149,8 @@ class HaloITSMAPI:
         
         if self.logger:
             self.logger.info(f"Making {method} request to {url}")
+            if json_data:
+                self.logger.info(f"Request payload: {json_data}")
         
         for attempt in range(retry_count):
             try:
@@ -172,15 +190,25 @@ class HaloITSMAPI:
                 if self.logger:
                     status = e.response.status_code if e.response else "unknown"
                     self.logger.warning(f"HTTP error on attempt {attempt + 1}/{retry_count}: {status}")
+                    if e.response:
+                        self.logger.warning(f"Response body: {e.response.text}")
                 if attempt == retry_count - 1:
                     status = e.response.status_code if e.response else "unknown"
                     text = e.response.text if e.response else str(e)
-                    # Ensure data is a simple string to avoid serialization issues
-                    error_data = f"Status: {status}, Response: {text[:500] if text else 'None'}"
+                    
+                    # Try to parse JSON error response
+                    error_detail = text
+                    try:
+                        if e.response:
+                            error_json = e.response.json()
+                            error_detail = str(error_json)
+                    except:
+                        pass
+                    
                     raise PluginException(
-                        cause=f"HTTP {status} error",
-                        assistance=f"HaloITSM API returned an error: {text[:200] if text else 'Unknown error'}",
-                        data=error_data
+                        cause=f"HaloITSM API error {status}",
+                        assistance=f"The API request failed. Error: {error_detail[:500]}",
+                        data=error_detail[:1000]
                     )
             except requests.exceptions.Timeout as e:
                 if self.logger:
@@ -224,12 +252,19 @@ class HaloITSMAPI:
     
     def create_ticket(self, ticket_data: Dict[str, Any]) -> Dict[str, Any]:
         """Create a new ticket"""
+        if self.logger:
+            self.logger.info(f"Creating ticket with data: {ticket_data}")
+        
         # HaloITSM expects an array of tickets
         response = self.make_request(
             method="POST",
             endpoint="/tickets",
             json_data=[ticket_data]
         )
+        
+        if self.logger:
+            self.logger.info(f"Create ticket response: {response}")
+        
         # Return first ticket from response
         if isinstance(response, list) and len(response) > 0:
             return response[0]
@@ -309,33 +344,34 @@ class HaloITSMAPI:
                 "id": ticket.get("id"),
                 "summary": ticket.get("summary", ""),
                 "details": ticket.get("details", ""),
-                "status": self._get_nested_name(ticket.get("status")),
+                "status_name": self._get_nested_name(ticket.get("status")),
                 "status_id": ticket.get("status_id"),
-                "priority": self._get_nested_name(ticket.get("priority")),
+                "priority_name": self._get_nested_name(ticket.get("priority")),
                 "priority_id": ticket.get("priority_id"),
-                "ticket_type": self._get_nested_name(ticket.get("tickettype")),
+                "ticket_type_name": self._get_nested_name(ticket.get("tickettype")),
                 "ticket_type_id": ticket.get("tickettype_id"),
-                "agent": self._get_nested_name(ticket.get("agent")),
+                "agent_name": self._get_nested_name(ticket.get("agent")),
                 "agent_id": ticket.get("agent_id"),
-                "team": self._get_nested_name(ticket.get("team")),
+                "team_name": self._get_nested_name(ticket.get("team")),
                 "team_id": ticket.get("team_id"),
-                "created_date": ticket.get("dateoccurred", ""),
-                "last_updated": ticket.get("dateupdated", ""),
-                "client": self._get_nested_name(ticket.get("client")),
+                "date_created": ticket.get("dateoccurred", ""),
+                "date_updated": ticket.get("dateupdated", ""),
+                "client_name": self._get_nested_name(ticket.get("client")),
                 "client_id": ticket.get("client_id"),
-                "site": self._get_nested_name(ticket.get("site")),
+                "site_name": self._get_nested_name(ticket.get("site")),
                 "site_id": ticket.get("site_id"),
-                "user": self._get_nested_name(ticket.get("user")),
+                "user_name": self._get_nested_name(ticket.get("user")),
                 "user_id": ticket.get("user_id"),
                 "category_1": ticket.get("category_1", ""),
                 "category_2": ticket.get("category_2", ""),
                 "category_3": ticket.get("category_3", ""),
                 "category_4": ticket.get("category_4", ""),
                 "resolution": ticket.get("resolution", ""),
-                "url": f"{self.resource_server.replace('/api', '') if self.resource_server else ''}/tickets/{ticket.get('id', '')}"
+                "url": f"{self.resource_server.replace('/api', '') if self.resource_server else ''}/tickets/{ticket.get('id', '')}",
+                "customfields": ticket.get("customfields", [])
             }
             
-            # Remove None values
+            # Remove None values (but keep empty strings and empty lists)
             return {k: v for k, v in normalized.items() if v is not None}
         except Exception as e:
             if self.logger:

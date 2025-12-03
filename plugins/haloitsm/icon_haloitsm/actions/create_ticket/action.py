@@ -83,27 +83,28 @@ class CreateTicket(insightconnect_plugin_runtime.Action):
     def _normalize_ticket(self, ticket_data):
         """
         Normalize ticket data to match output schema
+        Convert None values to empty strings for string fields
         """
         return {
             "id": ticket_data.get("id"),
-            "summary": ticket_data.get("summary"),
-            "details": ticket_data.get("details"),
+            "summary": ticket_data.get("summary", ""),
+            "details": ticket_data.get("details", ""),
             "tickettype_id": ticket_data.get("tickettype_id"),
             "status_id": ticket_data.get("status_id"),
-            "status_name": ticket_data.get("status", {}).get("name") if isinstance(ticket_data.get("status"), dict) else None,
+            "status_name": ticket_data.get("status", {}).get("name", "") if isinstance(ticket_data.get("status"), dict) else "",
             "priority_id": ticket_data.get("priority_id"),
-            "priority_name": ticket_data.get("priority", {}).get("name") if isinstance(ticket_data.get("priority"), dict) else None,
+            "priority_name": ticket_data.get("priority", {}).get("name", "") if isinstance(ticket_data.get("priority"), dict) else "",
             "category_id": ticket_data.get("category_id"),
             "agent_id": ticket_data.get("agent_id"),
-            "agent_name": ticket_data.get("agent", {}).get("name") if isinstance(ticket_data.get("agent"), dict) else None,
+            "agent_name": ticket_data.get("agent", {}).get("name", "") if isinstance(ticket_data.get("agent"), dict) else "",
             "team_id": ticket_data.get("team_id"),
-            "team_name": ticket_data.get("team", {}).get("name") if isinstance(ticket_data.get("team"), dict) else None,
+            "team_name": ticket_data.get("team", {}).get("name", "") if isinstance(ticket_data.get("team"), dict) else "",
             "site_id": ticket_data.get("site_id"),
             "user_id": ticket_data.get("user_id"),
-            "user_name": ticket_data.get("user", {}).get("name") if isinstance(ticket_data.get("user"), dict) else None,
-            "dateoccurred": ticket_data.get("dateoccurred"),
-            "datecreated": ticket_data.get("datecreated"),
-            "datemodified": ticket_data.get("datemodified"),
+            "user_name": ticket_data.get("user", {}).get("name", "") if isinstance(ticket_data.get("user"), dict) else "",
+            "dateoccurred": ticket_data.get("dateoccurred", ""),
+            "datecreated": ticket_data.get("datecreated", ""),
+            "datemodified": ticket_data.get("datemodified", ""),
             "customfields": ticket_data.get("customfields", []),
-            "url": ticket_data.get("url")
+            "url": ticket_data.get("url", "")
         }
