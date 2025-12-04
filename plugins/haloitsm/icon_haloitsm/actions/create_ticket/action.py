@@ -94,8 +94,10 @@ class CreateTicket(insightconnect_plugin_runtime.Action):
             status_name = ticket_data.get("status", {}).get("name", "")
         
         agent_name = ""
+        agent_email = ""
         if isinstance(ticket_data.get("agent"), dict):
             agent_name = ticket_data.get("agent", {}).get("name", "")
+            agent_email = ticket_data.get("agent", {}).get("emailaddress", "")
         
         result = {
             "id": ticket_data.get("id"),
@@ -106,6 +108,7 @@ class CreateTicket(insightconnect_plugin_runtime.Action):
             "priority_id": ticket_data.get("priority_id"),
             "agent_id": ticket_data.get("agent_id"),
             "agent_name": agent_name if agent_name is not None else "",
+            "agent_email": agent_email if agent_email is not None else "",
             "datecreated": ticket_data.get("datecreated", ""),
             "url": ticket_data.get("url", "")
         }

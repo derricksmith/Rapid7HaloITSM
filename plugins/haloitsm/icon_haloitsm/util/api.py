@@ -352,6 +352,7 @@ class HaloITSMAPI:
                 "ticket_type_id": ticket.get("tickettype_id"),
                 "agent_name": self._get_nested_name(ticket.get("agent")),
                 "agent_id": ticket.get("agent_id"),
+                "agent_email": self._get_nested_field(ticket.get("agent"), "emailaddress"),
                 "team_name": self._get_nested_name(ticket.get("team")),
                 "team_id": ticket.get("team_id"),
                 "date_created": ticket.get("dateoccurred", ""),
@@ -388,4 +389,10 @@ class HaloITSMAPI:
             return obj.get("name", "")
         elif isinstance(obj, str):
             return obj
+        return ""
+    
+    def _get_nested_field(self, obj: Any, field: str) -> str:
+        """Extract a specific field from nested object"""
+        if isinstance(obj, dict):
+            return obj.get(field, "")
         return ""
