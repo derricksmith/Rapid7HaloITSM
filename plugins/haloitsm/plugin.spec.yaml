@@ -5,7 +5,7 @@ products:
 name: haloitsm
 title: HaloITSM
 description: Manage tickets and automate workflows with HaloITSM service desk
-version: 2.1.1
+version: 2.1.2
 vendor: derricksmith
 support: community
 status: []

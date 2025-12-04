@@ -62,7 +62,7 @@ class CreateTicket(insightconnect_plugin_runtime.Action):
             # Create ticket using API client
             result = self.connection.client.create_ticket(ticket_data)
             
-            self.logger.info(f"CreateTicket v2.1.1: Ticket created successfully with ID {result.get('id')}")
+            self.logger.info(f"CreateTicket v2.1.2: Ticket created successfully with ID {result.get('id')}")
             self.logger.info(f"CreateTicket: Raw response from HaloITSM: {result}")
             
             # Build output

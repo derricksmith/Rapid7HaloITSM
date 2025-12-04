@@ -6,7 +6,7 @@ from sys import argv
 
 Name = "HaloITSM"
 Vendor = "derricksmith"
-Version = "2.1.1"
+Version = "2.1.2"
 Description = "Manage tickets and automate workflows with HaloITSM service desk"
 
 
@@ -49,6 +49,8 @@ def main():
             self.add_action(actions.AddComment())
         
             self.add_trigger(triggers.TicketCreated())
+            self.add_trigger(triggers.TicketUpdated())
+            self.add_trigger(triggers.TicketStatusChanged())
         
 
     """Run plugin"""
