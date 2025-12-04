@@ -576,7 +576,7 @@ For real-time sync from HaloITSM to InsightIDR, configure webhooks:
 
 ## Next Steps
 
-1. **Deploy HaloITSM Plugin v2.0.17** (includes enhanced logging and custom fields)
+1. **Deploy HaloITSM Plugin v2.0.20** (includes webhook triggers and agent email support)
 2. **Create custom fields in HaloITSM** (Investigation RRN, Priority, Alert Count)
 3. **Build Workflow 1** (Investigation → Ticket with alerts)
 4. **Test with manual investigation**
@@ -589,7 +589,7 @@ For real-time sync from HaloITSM to InsightIDR, configure webhooks:
 
 - **HaloITSM Plugin Repo:** https://github.com/derricksmith/Rapid7HaloITSM
 - **InsightIDR Plugin Docs:** `Rapid7.md`
-- **Plugin Version:** v2.0.17
+- **Plugin Version:** v2.0.20
 - **InsightConnect FQL Docs:** https://docs.rapid7.com/insightconnect/format-query-language/
 
 ---
