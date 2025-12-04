@@ -16,42 +16,39 @@ class TicketCreated(insightconnect_plugin_runtime.Trigger):
     def run(self, params={}):
         """
         Webhook trigger for new ticket creation
-        This runs as a webhook receiver in InsightConnect
+        Receives HTTP POST requests from HaloITSM webhooks
         """
-        # Get optional filters
+        # Get optional filters from trigger configuration
         filter_tickettype = params.get(Input.TICKETTYPE_ID)
         filter_priority = params.get(Input.PRIORITY_ID)
         
-        self.logger.info("TicketCreated: Webhook trigger started")
+        self.logger.info("TicketCreated: Webhook trigger ready to receive events")
         
+        # Webhook triggers run continuously waiting for webhook POST requests
         while True:
-            try:
-                # In webhook mode, this will be called by InsightConnect
-                # when a webhook payload is received
-                # The webhook payload will be in self.webhook_payload
+            # The workflow engine will populate params with webhook body on each request
+            ticket_data = params.get('ticket', {})
+            
+            if ticket_data:
+                # Apply filters if specified
+                if filter_tickettype and ticket_data.get('tickettype_id') != filter_tickettype:
+                    continue
                 
-                if hasattr(self, 'webhook_payload'):
-                    ticket_data = self.webhook_payload.get('ticket', {})
-                    
-                    # Apply filters if specified
-                    if filter_tickettype and ticket_data.get('tickettype_id') != filter_tickettype:
-                        continue
-                    
-                    if filter_priority and ticket_data.get('priority_id') != filter_priority:
-                        continue
-                    
+                if filter_priority and ticket_data.get('priority_id') != filter_priority:
+                    continue
+                
+                try:
                     # Normalize ticket data
                     from icon_haloitsm.actions.create_ticket.action import CreateTicket
                     normalized_ticket = CreateTicket()._normalize_ticket(ticket_data)
                     
-                    self.logger.info(f"TicketCreated: New ticket {ticket_data.get('id')} detected")
+                    self.logger.info(f"TicketCreated: Processing new ticket {ticket_data.get('id')}")
                     
                     # Send normalized ticket to workflow
                     self.send({Output.TICKET: normalized_ticket})
-                
-            except Exception as e:
-                self.logger.error(f"TicketCreated: Error processing webhook: {str(e)}")
+                    
+                except Exception as e:
+                    self.logger.error(f"TicketCreated: Error processing webhook: {str(e)}")
             
-            # Webhook triggers should not sleep - they wait for incoming requests
-            # If running in polling mode, add appropriate sleep
+            # Small sleep to prevent CPU spinning
             time.sleep(0.1)

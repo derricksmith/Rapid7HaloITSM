@@ -28,6 +28,8 @@ class ICONHaloitsm(insightconnect_plugin_runtime.Plugin):
         
         # Add triggers
         self.add_trigger(triggers.TicketCreated())
+        self.add_trigger(triggers.TicketUpdated())
+        self.add_trigger(triggers.TicketStatusChanged())
 
 
 def main():
