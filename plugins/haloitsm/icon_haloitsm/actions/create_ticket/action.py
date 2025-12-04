@@ -62,7 +62,8 @@ class CreateTicket(insightconnect_plugin_runtime.Action):
             # Create ticket using API client
             result = self.connection.client.create_ticket(ticket_data)
             
-            self.logger.info(f"CreateTicket: Ticket created successfully with ID {result.get('id')}")
+            self.logger.info(f"CreateTicket v2.0.17: Ticket created successfully with ID {result.get('id')}")
+            self.logger.info(f"CreateTicket: Raw response from HaloITSM: {result}")
             
             # Build output
             return {
@@ -85,7 +86,9 @@ class CreateTicket(insightconnect_plugin_runtime.Action):
         Normalize ticket data to match output schema
         Only return fields defined in the schema, convert None to empty strings
         """
-        # Extract nested name values safely
+        self.logger.info(f"Normalizing ticket data: {ticket_data}")
+        
+        # Extract nested name values safely - MUST return empty string, never None
         status_name = ""
         if isinstance(ticket_data.get("status"), dict):
             status_name = ticket_data.get("status", {}).get("name", "")
@@ -94,15 +97,18 @@ class CreateTicket(insightconnect_plugin_runtime.Action):
         if isinstance(ticket_data.get("agent"), dict):
             agent_name = ticket_data.get("agent", {}).get("name", "")
         
-        return {
+        result = {
             "id": ticket_data.get("id"),
             "summary": ticket_data.get("summary", ""),
             "details": ticket_data.get("details", ""),
             "status_id": ticket_data.get("status_id"),
-            "status_name": status_name,
+            "status_name": status_name if status_name is not None else "",
             "priority_id": ticket_data.get("priority_id"),
             "agent_id": ticket_data.get("agent_id"),
-            "agent_name": agent_name,
+            "agent_name": agent_name if agent_name is not None else "",
             "datecreated": ticket_data.get("datecreated", ""),
             "url": ticket_data.get("url", "")
         }
+        
+        self.logger.info(f"Normalized result: {result}")
+        return result
