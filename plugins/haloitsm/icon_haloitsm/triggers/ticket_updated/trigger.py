@@ -16,35 +16,35 @@ class TicketUpdated(insightconnect_plugin_runtime.Trigger):
     def run(self, params={}):
         """
         Webhook trigger for ticket updates
-        This runs as a webhook receiver in InsightConnect
+        Receives HTTP POST requests from HaloITSM webhooks
         """
-        # Get optional filters
+        # Get optional filters from trigger configuration
         filter_ticket_id = params.get(Input.TICKET_ID)
         filter_status_changed = params.get(Input.STATUS_CHANGED, False)
         
-        self.logger.info("TicketUpdated: Webhook trigger started")
+        self.logger.info("TicketUpdated: Webhook trigger ready to receive events")
         
+        # Webhook triggers run continuously waiting for webhook POST requests
         while True:
-            try:
-                # In webhook mode, this will be called by InsightConnect
-                # when a webhook payload is received
-                # The webhook payload will be in self.webhook_payload
+            # The workflow engine will populate params with webhook body on each request
+            ticket_data = params.get('ticket', {})
+            previous_status_id = params.get('previous_status_id')
+            
+            if ticket_data:
+                # Apply filters if specified
+                if filter_ticket_id and ticket_data.get('id') != filter_ticket_id:
+                    time.sleep(0.1)
+                    continue
                 
-                if hasattr(self, 'webhook_payload'):
-                    ticket_data = self.webhook_payload.get('ticket', {})
-                    
-                    # Apply filters if specified
-                    if filter_ticket_id and ticket_data.get('id') != filter_ticket_id:
-                        continue
-                    
-                    # Check if status changed (if filter enabled)
-                    previous_status = self.webhook_payload.get('previous_status_id')
+                # Check if status changed (if filter enabled)
+                if filter_status_changed:
                     current_status = ticket_data.get('status_id')
-                    
-                    if filter_status_changed and previous_status == current_status:
+                    if previous_status_id == current_status:
                         # Skip if status didn't change and filter is enabled
+                        time.sleep(0.1)
                         continue
-                    
+                
+                try:
                     # Normalize ticket data
                     from icon_haloitsm.actions.create_ticket.action import CreateTicket
                     normalized_ticket = CreateTicket()._normalize_ticket(ticket_data)
@@ -55,15 +55,14 @@ class TicketUpdated(insightconnect_plugin_runtime.Trigger):
                     output = {Output.TICKET: normalized_ticket}
                     
                     # Include previous status if available
-                    if previous_status is not None:
-                        output[Output.PREVIOUS_STATUS_ID] = previous_status
+                    if previous_status_id is not None:
+                        output[Output.PREVIOUS_STATUS_ID] = previous_status_id
                     
                     # Send normalized ticket to workflow
                     self.send(output)
                 
-            except Exception as e:
-                self.logger.error(f"TicketUpdated: Error processing webhook: {str(e)}")
+                except Exception as e:
+                    self.logger.error(f"TicketUpdated: Error processing webhook: {str(e)}")
             
-            # Webhook triggers should not sleep - they wait for incoming requests
-            # If running in polling mode, add appropriate sleep
+            # Small sleep to prevent CPU spinning
             time.sleep(0.1)
