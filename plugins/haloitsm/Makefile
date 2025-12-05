@@ -7,7 +7,7 @@ NORMAL := "\033[0m"
 # Plugin metadata (must match plugin.spec.yaml)
 VENDOR := derricksmith
 NAME := haloitsm
-VERSION := 2.1.3
+VERSION := 2.1.4
 
 .PHONY: default image export test validate clean install lint
 

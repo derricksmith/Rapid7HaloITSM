@@ -5,7 +5,7 @@ products:
 name: haloitsm
 title: HaloITSM
 description: Manage tickets and automate workflows with HaloITSM service desk
-version: 2.1.3
+version: 2.1.4
 vendor: derricksmith
 support: community
 status: []
@@ -466,6 +466,50 @@ actions:
       success:
         title: Success
         description: Was the assignment successful
+        type: boolean
+        required: true
+
+  get_user:
+    title: Get User
+    description: Get user information by ID
+    input:
+      user_id:
+        title: User ID
+        description: ID of the user to retrieve
+        type: integer
+        required: true
+        example: 123
+    output:
+      user:
+        title: User
+        description: User details
+        type: object
+        required: true
+      success:
+        title: Success
+        description: Whether the operation was successful
+        type: boolean
+        required: true
+
+  get_agent:
+    title: Get Agent
+    description: Get agent information by ID
+    input:
+      agent_id:
+        title: Agent ID
+        description: ID of the agent to retrieve
+        type: integer
+        required: true
+        example: 456
+    output:
+      agent:
+        title: Agent
+        description: Agent details
+        type: object
+        required: true
+      success:
+        title: Success
+        description: Whether the operation was successful
         type: boolean
         required: true
 

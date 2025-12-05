@@ -6,6 +6,8 @@ from .search_tickets.action import SearchTickets
 from .close_ticket.action import CloseTicket
 from .assign_ticket.action import AssignTicket
 from .add_comment.action import AddComment
+from .get_user.action import GetUser
+from .get_agent.action import GetAgent
 
 __all__ = [
     "CreateTicket",
@@ -14,5 +16,7 @@ __all__ = [
     "SearchTickets",
     "CloseTicket",
     "AssignTicket",
-    "AddComment"
+    "AddComment",
+    "GetUser",
+    "GetAgent"
 ]
